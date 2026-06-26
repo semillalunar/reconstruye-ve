@@ -19,3 +19,30 @@ CREATE TABLE reportes_infraestructura (
 
 -- Índice geoespacial para consultas rápidas en el mapa de calor
 CREATE INDEX idx_reportes_geometria ON reportes_infraestructura USING gist(coordenadas);
+
+-- Tabla de Evaluaciones Rápidas ATC-20 (In-Situ por Ingenieros)
+CREATE TABLE evaluaciones_atc20 (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    -- Inspector
+    inspector_nombre VARCHAR(150) NOT NULL,
+    inspector_cedula VARCHAR(50) NOT NULL,
+    -- Localización
+    coordenadas GEOMETRY(Point, 4326) NOT NULL,
+    direccion TEXT,
+    -- Datos Edificación
+    nombre_edificacion VARCHAR(150),
+    uso_predominante VARCHAR(50),
+    numero_pisos INT,
+    material_predominante VARCHAR(50),
+    -- Resultados de la Evaluación (A, B o C según manual)
+    riesgo_externo VARCHAR(10), 
+    piso_critico_riesgo VARCHAR(10),
+    dano_moderado_riesgo VARCHAR(10),
+    no_estructural_riesgo VARCHAR(10),
+    -- Decisión Final (Algoritmo ATC-20)
+    etiqueta_final VARCHAR(20) NOT NULL, -- VERDE, AMARILLA, ROJA
+    acciones_recomendadas TEXT[],
+    creado_el TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_evaluaciones_geometria ON evaluaciones_atc20 USING gist(coordenadas);
