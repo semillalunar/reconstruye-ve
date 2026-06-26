@@ -13,8 +13,11 @@ export default function SolicitudInspeccion() {
     direccion_exacta: '',
     tipo_edificacion: 'Casa',
     descripcion_dano: '',
-    hay_heridos: false
+    hay_heridos: false,
+    evidencia_fotografica: []
   });
+
+  const [previewImages, setPreviewImages] = useState<string[]>([]);
 
   const updateData = (fields: Partial<SolicitudData>) => setData(prev => ({ ...prev, ...fields }));
 
@@ -25,6 +28,7 @@ export default function SolicitudInspeccion() {
     
     const submitToServer = async (lat: number, lng: number) => {
       setGpsLoading(false);
+      // Las imágenes ya están en data.evidencia_fotografica en formato base64
       const finalData = { ...data, lat, lng } as SolicitudData;
       const result = await submitSolicitudAction(finalData);
       if (result.success) setSubmitted(true);
@@ -45,6 +49,22 @@ export default function SolicitudInspeccion() {
     } else {
       submitToServer(10.4806, -66.9036);
     }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files) return;
+    const files = Array.from(e.target.files).slice(0, 5);
+    
+    Promise.all(files.map(file => {
+      return new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.readAsDataURL(file);
+      });
+    })).then(base64Images => {
+      setPreviewImages(base64Images);
+      updateData({ evidencia_fotografica: base64Images });
+    });
   };
 
   if (submitted) {
@@ -115,6 +135,25 @@ export default function SolicitudInspeccion() {
           <div>
             <label className="block text-gray-700 font-bold mb-2">¿Qué tipo de daños observas?</label>
             <textarea required className="w-full p-3 bg-gray-50 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all h-24" placeholder="Ej: Hay una grieta en forma de X en la pared de la sala, y la columna del estacionamiento se rompió." value={data.descripcion_dano} onChange={e => updateData({ descripcion_dano: e.target.value })}></textarea>
+          </div>
+
+          <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+            <h3 className="font-bold text-blue-900 mb-2 flex items-center gap-2">📷 Evidencia Fotográfica (Max 5)</h3>
+            <p className="text-sm text-blue-700 mb-4">
+              <strong>Micro-Guía:</strong> Ayude al ingeniero tomando buenas fotos:
+              <br/>1. Una foto general del edificio desde la calle.
+              <br/>2. Una foto de la grieta o daño principal.
+              <br/>3. Evite fotos borrosas.
+            </p>
+            <input type="file" accept="image/*" multiple onChange={handleFileChange} className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-100 file:text-blue-700 hover:file:bg-blue-200" />
+            
+            {previewImages.length > 0 && (
+              <div className="flex gap-2 mt-4 overflow-x-auto pb-2">
+                {previewImages.map((src, idx) => (
+                  <img key={idx} src={src} alt="Evidencia" className="h-16 w-16 object-cover rounded shadow" />
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="flex items-center bg-red-50 p-4 rounded-xl border border-red-100">

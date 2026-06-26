@@ -43,6 +43,7 @@ export type ATC20CompletaData = {
   etiqueta_final: 'VERDE' | 'AMARILLA' | 'ROJA';
   acciones_recomendadas: string[];
   comentarios: string;
+  evidencia_fotografica: string[];
 };
 
 export async function submitATC20Action(data: ATC20CompletaData) {
@@ -55,7 +56,7 @@ export async function submitATC20Action(data: ATC20CompletaData) {
         critico_acceso, critico_piso, sev_columnas, sev_muros_conc, sev_muros_mamp, sev_vigas, piso_critico_riesgo,
         mod_tipo_elemento, mod_examinados, mod_danados, dano_moderado_riesgo,
         noest_losas, noest_paredes, noest_tanques, noest_gas, noest_ascensores, no_estructural_riesgo,
-        etiqueta_final, acciones_recomendadas, comentarios
+        etiqueta_final, acciones_recomendadas, comentarios, evidencia_fotografica
       ) 
       VALUES (
         $1, $2, ST_SetSRID(ST_MakePoint($3, $4), 4326), $5,
@@ -64,7 +65,7 @@ export async function submitATC20Action(data: ATC20CompletaData) {
         $16, $17, $18, $19, $20, $21, $22,
         $23, $24, $25, $26,
         $27, $28, $29, $30, $31, $32,
-        $33, $34, $35
+        $33, $34, $35, $36
       )
       RETURNING id
     `;
@@ -76,7 +77,7 @@ export async function submitATC20Action(data: ATC20CompletaData) {
       data.critico_acceso, data.critico_piso, data.sev_columnas, data.sev_muros_conc, data.sev_muros_mamp, data.sev_vigas, data.piso_critico_riesgo,
       data.mod_tipo_elemento, data.mod_examinados, data.mod_danados, data.dano_moderado_riesgo,
       data.noest_losas, data.noest_paredes, data.noest_tanques, data.noest_gas, data.noest_ascensores, data.no_estructural_riesgo,
-      data.etiqueta_final, data.acciones_recomendadas, data.comentarios
+      data.etiqueta_final, data.acciones_recomendadas, data.comentarios, data.evidencia_fotografica
     ];
 
     const result = await pool.query(query, values);

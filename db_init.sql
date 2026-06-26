@@ -70,6 +70,7 @@ CREATE TABLE evaluaciones_atc20_completa (
     -- 7. ACCIONES Y ANOTACIONES
     acciones_recomendadas TEXT[],
     comentarios TEXT,
+    evidencia_fotografica TEXT[],
 
     creado_el TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
@@ -86,6 +87,7 @@ CREATE TABLE solicitudes_inspeccion (
     descripcion_dano TEXT NOT NULL,
     hay_heridos BOOLEAN DEFAULT FALSE,
     coordenadas GEOMETRY(Point, 4326) NOT NULL,
+    evidencia_fotografica TEXT[],
     estado VARCHAR(20) DEFAULT 'PENDIENTE', -- PENDIENTE, EN_REVISION, INSPECCIONADO
     creado_el TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );

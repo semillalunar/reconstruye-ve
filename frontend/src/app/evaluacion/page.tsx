@@ -21,8 +21,10 @@ export default function PlanillaEvaluacionRapida() {
     noest_losas: 'bajo', noest_paredes: 'bajo', noest_tanques: 'bajo', noest_gas: 'bajo', noest_ascensores: 'bajo',
     no_estructural_riesgo: 'A',
     
-    acciones_recomendadas: [], comentarios: ''
+    acciones_recomendadas: [], comentarios: '', evidencia_fotografica: []
   });
+
+  const [previewImages, setPreviewImages] = useState<string[]>([]);
 
   const updateData = (fields: Partial<ATC20CompletaData>) => setData(prev => ({ ...prev, ...fields }));
 
@@ -66,6 +68,22 @@ export default function PlanillaEvaluacionRapida() {
     if (risks.includes('C')) return 'ROJA';
     if (risks.includes('B')) return 'AMARILLA';
     return 'VERDE';
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files) return;
+    const files = Array.from(e.target.files).slice(0, 5);
+    
+    Promise.all(files.map(file => {
+      return new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.readAsDataURL(file);
+      });
+    })).then(base64Images => {
+      setPreviewImages(base64Images);
+      updateData({ evidencia_fotografica: base64Images });
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -283,9 +301,25 @@ export default function PlanillaEvaluacionRapida() {
             </table>
           </section>
 
-          {/* 7. COMENTARIOS (NUEVO) */}
+          {/* 7. EVIDENCIA FOTOGRÁFICA (NUEVO) */}
           <section>
-            <h2 className="bg-gray-800 text-white font-bold px-3 py-1 mb-2">7. ANOTACIONES Y OBSERVACIONES DEL INSPECTOR</h2>
+            <h2 className="bg-gray-800 text-white font-bold px-3 py-1 mb-2">7. EVIDENCIA FOTOGRÁFICA (Máx 5)</h2>
+            <div className="border border-gray-400 p-4 bg-gray-50">
+              <input type="file" accept="image/*" multiple onChange={handleFileChange} className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-100 file:text-blue-700 hover:file:bg-blue-200" />
+              
+              {previewImages.length > 0 && (
+                <div className="flex gap-2 mt-4 overflow-x-auto pb-2">
+                  {previewImages.map((src, idx) => (
+                    <img key={idx} src={src} alt="Evidencia ATC-20" className="h-20 w-20 object-cover border border-gray-300" />
+                  ))}
+                </div>
+              )}
+            </div>
+          </section>
+
+          {/* 8. COMENTARIOS (NUEVO) */}
+          <section>
+            <h2 className="bg-gray-800 text-white font-bold px-3 py-1 mb-2">8. ANOTACIONES Y OBSERVACIONES DEL INSPECTOR</h2>
             <textarea 
               className="w-full border border-gray-400 p-3 h-24 font-mono text-sm outline-none focus:border-blue-500 bg-yellow-50/30" 
               placeholder="Escriba observaciones adicionales, croquis mental o justificaciones de la decisión..."
@@ -293,10 +327,10 @@ export default function PlanillaEvaluacionRapida() {
             ></textarea>
           </section>
 
-          {/* 6. RESULTADO FINAL */}
+          {/* 9. RESULTADO FINAL */}
           <section className="bg-gray-100 border-4 border-gray-800 p-6 flex items-center justify-between shadow-inner">
             <div>
-              <h2 className="text-xl font-bold uppercase mb-1">6. RECOMENDACIÓN DE ACCESO</h2>
+              <h2 className="text-xl font-bold uppercase mb-1">9. RECOMENDACIÓN DE ACCESO</h2>
               <p className="text-xs text-gray-500 max-w-sm">Calculado según el riesgo más desfavorable de los puntos 2, 3, 4 y 5. Al guardar, se fijará la coordenada GPS.</p>
             </div>
             
