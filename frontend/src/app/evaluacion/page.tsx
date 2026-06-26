@@ -56,6 +56,12 @@ export default function PlanillaEvaluacionRapida() {
   };
 
   // UI Components
+  const BackButton = ({ prevStep }: { prevStep: Step }) => (
+    <button onClick={() => setStep(prevStep)} className="text-sm text-blue-400 mb-4 hover:underline flex items-center gap-1">
+      <span>←</span> Volver para corregir
+    </button>
+  );
+
   const SectionHeader = ({ title, helpText }: { title: string, helpText: string }) => (
     <div className="mb-6 border-b border-gray-700 pb-4">
       <h2 className="text-xl font-bold text-white uppercase tracking-wider">{title}</h2>
@@ -112,6 +118,7 @@ export default function PlanillaEvaluacionRapida() {
 
   const renderExterna = () => (
     <div className="space-y-4 animate-fade-in pb-10">
+      <BackButton prevStep="INFO" />
       <SectionHeader 
         title="2. INSPECCIÓN EXTERNA" 
         helpText="Determinar Riesgo Externo (Bajo, Medio, Alto) con base en recorrido alrededor del edificio. 'Peligro geotécnico' incluye agrietamiento del terreno. 'Inclinación' se mide con plomada de 60cm." 
@@ -154,6 +161,7 @@ export default function PlanillaEvaluacionRapida() {
 
   const renderPisoCritico = () => (
     <div className="space-y-4 animate-fade-in pb-10">
+      <BackButton prevStep="EXTERNA" />
       <SectionHeader 
         title="3. PISO CRÍTICO Y DAÑO SEVERO" 
         helpText="Identifique el piso con mayor concentración de daños. Examine columnas, uniones, muros de carga. Cuente elementos con daño SEVERO o COMPLETO (Pandeo de barras, caída de concreto, grietas en X > 3mm)." 
@@ -177,6 +185,7 @@ export default function PlanillaEvaluacionRapida() {
 
   const renderModerado = () => (
     <div className="space-y-4 animate-fade-in pb-10">
+      <BackButton prevStep="PISO_CRITICO" />
       <SectionHeader 
         title="4. INSPECCIÓN DAÑO MODERADO" 
         helpText="Calcule el % de elementos con daño Moderado (Grietas 1-2mm en columnas/vigas, o agrietamiento diagonal incipiente en muros)." 
@@ -201,6 +210,7 @@ export default function PlanillaEvaluacionRapida() {
 
   const renderNoEstructural = () => (
     <div className="space-y-4 animate-fade-in pb-10">
+      <BackButton prevStep="MODERADO" />
       <SectionHeader 
         title="5. COMPONENTES NO ESTRUCTURALES" 
         helpText="Evaluar Paredes de relleno, escaleras, tanques, gas, electricidad. Riesgo de caída compromete la seguridad." 
@@ -227,6 +237,7 @@ export default function PlanillaEvaluacionRapida() {
     const finalTag = calculateFinalTag();
     return (
       <div className="p-4 animate-fade-in flex flex-col justify-center h-full">
+        <BackButton prevStep="NO_ESTRUCTURAL" />
         <h2 className="text-xl font-bold text-white mb-6 text-center">6. RECOMENDACIÓN DE ACCESO</h2>
         
         {finalTag === 'VERDE' && (
