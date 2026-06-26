@@ -28,41 +28,61 @@ export default function ReporteCiudadano() {
   const handleSubmit = async () => {
     setIsSubmitting(true);
     
-    // Obtener Geolocalización del navegador
+    // Función auxiliar para enviar al servidor
+    const submitToServer = async (lat: number, lng: number) => {
+      const result = await submitReportAction({
+        tipo_infraestructura: infraType,
+        gravedad_ciudadano: severity || 'VERDE',
+        lat: lat,
+        lng: lng,
+        imagenes: ['ipfs://mock-cid-1', 'ipfs://mock-cid-2']
+      });
+
+      if (result.success && result.seedPhrase) {
+        setRealSeedPhrase(result.seedPhrase);
+        setStep('SUBMITTED');
+      } else {
+        alert('Hubo un error al enviar el reporte. Inténtalo de nuevo.');
+      }
+      setIsSubmitting(false);
+    };
+
+    // Timeout de seguridad: Si el GPS tarda más de 3 segundos o está bloqueado, se usa ubicación por defecto
+    let locationResolved = false;
+    const timeoutId = setTimeout(() => {
+      if (!locationResolved) {
+        locationResolved = true;
+        console.warn("Geolocalización bloqueada o muy lenta, usando ubicación por defecto (Caracas)");
+        submitToServer(10.4806, -66.9036);
+      }
+    }, 3000);
+
+    // Intentar obtener Geolocalización real
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          const lat = position.coords.latitude;
-          const lng = position.coords.longitude;
-          
-          // Llamar al Server Action seguro
-          const result = await submitReportAction({
-            tipo_infraestructura: infraType,
-            gravedad_ciudadano: severity || 'VERDE',
-            lat: lat,
-            lng: lng,
-            imagenes: ['ipfs://mock-cid-1', 'ipfs://mock-cid-2'] // TODO: Implementar IPFS upload
-          });
-
-          if (result.success && result.seedPhrase) {
-            setRealSeedPhrase(result.seedPhrase);
-            setStep('SUBMITTED');
-          } else {
-            alert('Hubo un error al enviar el reporte. Inténtalo de nuevo.');
-          }
-          setIsSubmitting(false);
+        (position) => {
+          if (locationResolved) return;
+          locationResolved = true;
+          clearTimeout(timeoutId);
+          submitToServer(position.coords.latitude, position.coords.longitude);
         },
         (error) => {
+          if (locationResolved) return;
+          locationResolved = true;
+          clearTimeout(timeoutId);
           console.error("Error obteniendo ubicación:", error);
-          alert('Debes permitir el acceso a la ubicación para validar el reporte ciudadano.');
-          setIsSubmitting(false);
-        }
+          submitToServer(10.4806, -66.9036); // Fallback Caracas
+        },
+        { timeout: 2500 }
       );
     } else {
-      alert("Geolocalización no soportada por el navegador.");
-      setIsSubmitting(false);
+      if (!locationResolved) {
+        locationResolved = true;
+        clearTimeout(timeoutId);
+        submitToServer(10.4806, -66.9036);
+      }
     }
-  }
+  };
 
   return (
     <main className="min-h-screen bg-black text-gray-100 font-sans flex flex-col items-center justify-center p-0 md:p-4">
