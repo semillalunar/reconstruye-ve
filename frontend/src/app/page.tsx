@@ -1,5 +1,6 @@
 "use client";
 import { useState } from 'react';
+import { submitReportAction } from '@/actions/submitReport';
 
 type Step = 'CAMERA' | 'HOME' | 'WALLS' | 'STRUCTURE' | 'RESULT' | 'SUBMITTED';
 type Severity = 'VERDE' | 'AMARILLO' | 'ROJO' | null;
@@ -8,6 +9,9 @@ export default function ReporteCiudadano() {
   const [step, setStep] = useState<Step>('CAMERA');
   const [severity, setSeverity] = useState<Severity>(null);
   const [mediaCount, setMediaCount] = useState(0);
+  const [infraType, setInfraType] = useState<string>('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [realSeedPhrase, setRealSeedPhrase] = useState<string | null>(null);
 
   const handleCapture = () => {
     // Simula tomar una foto
@@ -21,8 +25,43 @@ export default function ReporteCiudadano() {
     setStep('RESULT');
   };
 
-  const handleSubmit = () => {
-    setStep('SUBMITTED');
+  const handleSubmit = async () => {
+    setIsSubmitting(true);
+    
+    // Obtener Geolocalización del navegador
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const lat = position.coords.latitude;
+          const lng = position.coords.longitude;
+          
+          // Llamar al Server Action seguro
+          const result = await submitReportAction({
+            tipo_infraestructura: infraType,
+            gravedad_ciudadano: severity || 'VERDE',
+            lat: lat,
+            lng: lng,
+            imagenes: ['ipfs://mock-cid-1', 'ipfs://mock-cid-2'] // TODO: Implementar IPFS upload
+          });
+
+          if (result.success && result.seedPhrase) {
+            setRealSeedPhrase(result.seedPhrase);
+            setStep('SUBMITTED');
+          } else {
+            alert('Hubo un error al enviar el reporte. Inténtalo de nuevo.');
+          }
+          setIsSubmitting(false);
+        },
+        (error) => {
+          console.error("Error obteniendo ubicación:", error);
+          alert('Debes permitir el acceso a la ubicación para validar el reporte ciudadano.');
+          setIsSubmitting(false);
+        }
+      );
+    } else {
+      alert("Geolocalización no soportada por el navegador.");
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -97,7 +136,7 @@ export default function ReporteCiudadano() {
               <p className="text-gray-400 text-sm mb-6">Selecciona la zona afectada en base a la evidencia que acabas de capturar.</p>
               
               <button 
-                onClick={() => setStep('WALLS')}
+                onClick={() => { setInfraType('Paredes'); setStep('WALLS'); }}
                 className="w-full text-left p-6 rounded-2xl bg-gray-800 border-2 border-gray-700 hover:border-blue-500 transition-all flex items-center space-x-6 group shadow-lg"
               >
                 <div className="text-5xl group-hover:scale-110 transition-transform">🧱</div>
@@ -108,7 +147,7 @@ export default function ReporteCiudadano() {
               </button>
 
               <button 
-                onClick={() => setStep('STRUCTURE')}
+                onClick={() => { setInfraType('Estructura'); setStep('STRUCTURE'); }}
                 className="w-full text-left p-6 rounded-2xl bg-gray-800 border-2 border-gray-700 hover:border-red-500 transition-all flex items-center space-x-6 group shadow-lg"
               >
                 <div className="text-5xl group-hover:scale-110 transition-transform">🏗️</div>
@@ -185,10 +224,11 @@ export default function ReporteCiudadano() {
               <div className="mt-8">
                 <button 
                   onClick={handleSubmit}
-                  className="w-full bg-white text-black font-bold py-5 rounded-2xl shadow-xl transition-transform hover:scale-[1.02] active:scale-95 text-lg flex items-center justify-center gap-3"
+                  disabled={isSubmitting}
+                  className="w-full bg-white text-black font-bold py-5 rounded-2xl shadow-xl transition-transform hover:scale-[1.02] active:scale-95 text-lg flex items-center justify-center gap-3 disabled:opacity-70 disabled:hover:scale-100"
                 >
-                  <span>Enviar Evidencia Cifrada</span>
-                  <span className="text-xl">🔒</span>
+                  <span>{isSubmitting ? 'Cifrando y Enviando...' : 'Enviar Evidencia Cifrada'}</span>
+                  <span className="text-xl">{isSubmitting ? '⏳' : '🔒'}</span>
                 </button>
                 <button onClick={() => setStep('HOME')} className="mt-6 text-gray-500 hover:text-white transition-colors p-2 text-sm font-medium uppercase tracking-wider">
                   Reevaluar Clasificación
@@ -218,7 +258,7 @@ export default function ReporteCiudadano() {
                   <span>🔑</span> Identidad Anónima (DID)
                 </p>
                 <div className="font-mono bg-black/60 p-4 rounded-xl text-blue-300 text-lg text-center tracking-widest border border-blue-900/30">
-                  ALFA - TIGRE - PUENTE
+                  {realSeedPhrase || 'ERROR_GENERANDO_SEMILLA'}
                 </div>
                 <p className="text-xs text-gray-500 mt-4 text-center leading-relaxed">
                   Guarda esta frase semilla. Con ella podrás saber si tu evidencia detona una auditoría anticorrupción en el futuro.
