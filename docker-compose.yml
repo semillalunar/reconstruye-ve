@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  # PostgreSQL con extensión PostGIS para geolocalización (Módulo 1)
+  postgres:
+    image: postgis/postgis:15-3.3
+    container_name: reconstruye_postgres
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: adminpassword
+      POSTGRES_DB: reconstruye_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./db_init.sql:/docker-entrypoint-initdb.d/db_init.sql
+    restart: unless-stopped
+
+  # Neo4j para el Grafo Anticorrupción (Módulo 2)
+  neo4j:
+    image: neo4j:5.12.0-community
+    container_name: reconstruye_neo4j
+    environment:
+      NEO4J_AUTH: neo4j/adminpassword
+      NEO4J_apoc_export_file_enabled: "true"
+      NEO4J_apoc_import_file_enabled: "true"
+      NEO4J_apoc_import_file_use__neo4j__config: "true"
+      NEO4J_PLUGINS: '["apoc"]'
+    ports:
+      - "7474:7474" # HTTP Browser
+      - "7687:7687" # Bolt connection
+    volumes:
+      - neo4j_data:/data
+      - neo4j_logs:/logs
+      - neo4j_import:/var/lib/neo4j/import
+      - neo4j_plugins:/plugins
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  neo4j_data:
+  neo4j_logs:
+  neo4j_import:
+  neo4j_plugins:
