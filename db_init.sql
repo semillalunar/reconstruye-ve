@@ -75,3 +75,19 @@ CREATE TABLE evaluaciones_atc20_completa (
 );
 
 CREATE INDEX idx_evaluaciones_completa_geo ON evaluaciones_atc20_completa USING gist(coordenadas);
+
+-- Tabla de Solicitudes de Inspección (Ciudadanos Afectados)
+CREATE TABLE solicitudes_inspeccion (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    nombre_contacto VARCHAR(150) NOT NULL,
+    telefono_contacto VARCHAR(50) NOT NULL,
+    direccion_exacta TEXT NOT NULL,
+    tipo_edificacion VARCHAR(50) NOT NULL,
+    descripcion_dano TEXT NOT NULL,
+    hay_heridos BOOLEAN DEFAULT FALSE,
+    coordenadas GEOMETRY(Point, 4326) NOT NULL,
+    estado VARCHAR(20) DEFAULT 'PENDIENTE', -- PENDIENTE, EN_REVISION, INSPECCIONADO
+    creado_el TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_solicitudes_geo ON solicitudes_inspeccion USING gist(coordenadas);
