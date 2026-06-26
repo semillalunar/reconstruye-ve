@@ -20,29 +20,58 @@ CREATE TABLE reportes_infraestructura (
 -- Índice geoespacial para consultas rápidas en el mapa de calor
 CREATE INDEX idx_reportes_geometria ON reportes_infraestructura USING gist(coordenadas);
 
--- Tabla de Evaluaciones Rápidas ATC-20 (In-Situ por Ingenieros)
-CREATE TABLE evaluaciones_atc20 (
+-- Tabla de Evaluaciones Rápidas ATC-20 Completa (Formato Planilla Detallada)
+CREATE TABLE evaluaciones_atc20_completa (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    -- Inspector
+    -- 1. INFORMACIÓN GENERAL
     inspector_nombre VARCHAR(150) NOT NULL,
     inspector_cedula VARCHAR(50) NOT NULL,
-    -- Localización
     coordenadas GEOMETRY(Point, 4326) NOT NULL,
     direccion TEXT,
-    -- Datos Edificación
     nombre_edificacion VARCHAR(150),
     uso_predominante VARCHAR(50),
     numero_pisos INT,
     material_predominante VARCHAR(50),
-    -- Resultados de la Evaluación (A, B o C según manual)
-    riesgo_externo VARCHAR(10), 
-    piso_critico_riesgo VARCHAR(10),
-    dano_moderado_riesgo VARCHAR(10),
-    no_estructural_riesgo VARCHAR(10),
-    -- Decisión Final (Algoritmo ATC-20)
-    etiqueta_final VARCHAR(20) NOT NULL, -- VERDE, AMARILLA, ROJA
+    
+    -- 2. INSPECCIÓN EXTERNA
+    ext_colapso VARCHAR(20),
+    ext_aledanos VARCHAR(20),
+    ext_geologico VARCHAR(20),
+    ext_asentamiento VARCHAR(20),
+    ext_inclinacion VARCHAR(20),
+    riesgo_externo VARCHAR(5),
+
+    -- 3. PISO CRÍTICO Y DAÑO SEVERO
+    critico_acceso VARCHAR(20),
+    critico_piso VARCHAR(50),
+    sev_columnas INT DEFAULT 0,
+    sev_muros_conc INT DEFAULT 0,
+    sev_muros_mamp INT DEFAULT 0,
+    sev_vigas INT DEFAULT 0,
+    piso_critico_riesgo VARCHAR(5),
+
+    -- 4. DAÑO MODERADO
+    mod_tipo_elemento VARCHAR(50),
+    mod_examinados INT DEFAULT 0,
+    mod_danados INT DEFAULT 0,
+    dano_moderado_riesgo VARCHAR(5),
+
+    -- 5. NO ESTRUCTURAL
+    noest_losas VARCHAR(20),
+    noest_paredes VARCHAR(20),
+    noest_tanques VARCHAR(20),
+    noest_gas VARCHAR(20),
+    noest_ascensores VARCHAR(20),
+    no_estructural_riesgo VARCHAR(5),
+
+    -- 6. RIESGO ASOCIADO Y ETIQUETA FINAL
+    etiqueta_final VARCHAR(20) NOT NULL,
+    
+    -- 7. ACCIONES Y ANOTACIONES
     acciones_recomendadas TEXT[],
+    comentarios TEXT,
+
     creado_el TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_evaluaciones_geometria ON evaluaciones_atc20 USING gist(coordenadas);
+CREATE INDEX idx_evaluaciones_completa_geo ON evaluaciones_atc20_completa USING gist(coordenadas);
