@@ -1,41 +1,42 @@
 # Reconstruye VE 🇻🇪
 
-**Plataforma Open-Source de Triaje Estructural y Evaluación Cruzada**
+**Plataforma Open-Source de Triaje Estructural y Evaluación Rápida de Daños (Estándar ATC-20)**
 
-> *Frente a las emergencias, la organización civil y el conocimiento técnico son nuestras mejores herramientas para ayudar de forma eficiente.*
+> *Nuestra intención principal es colaborar en la recolección de datos precisos a través de reportes estandarizados, siguiendo estrictamente los protocolos internacionales (ATC-20 / FUNVISIS).*
 
-Esta es una iniciativa independiente, colaborativa y sin fines de lucro enfocada en la emergencia post-sismo en Venezuela. Nuestro objetivo inmediato es proveer un sistema descentralizado donde los ciudadanos puedan reportar daños estructurales con "fricción cero", y un panel donde ingenieros voluntarios puedan validar la gravedad de esos daños a distancia, generando un mapa civil certificado de necesidades urgentes.
+Frente a la emergencia, la organización civil guiada por el rigor técnico es nuestra mejor herramienta. Este proyecto es una iniciativa independiente y de código abierto para dotar a los grupos de ingenieros voluntarios (y a la ciudadanía) de una plataforma descentralizada para mapear y certificar daños estructurales de forma rápida e in-situ.
 
-## 🚀 Arquitectura del Proyecto
+## 🚀 Arquitectura y Módulos del Proyecto
 
-El proyecto está diseñado bajo un enfoque **Offline-First** y de **Privacidad por Diseño** para proteger a los usuarios.
+El sistema está diseñado para capturar la realidad del terreno en dos niveles, utilizando un enfoque **Offline-First** y **PostGIS** para el análisis geoespacial.
 
-### Fase 1: El Foco Inmediato (Reporte y Triaje)
-Buscamos colaboración urgente para desarrollar y pulir estos dos componentes críticos:
+### Fase 1: El Foco Inmediato (Recolección de Datos y Triaje)
+Buscamos colaboración urgente para desarrollar y extender estos dos frentes de inspección:
 
-#### 1. Frontend (Captura Ciudadana de Fricción Cero)
-*   **Stack:** Next.js (App Router), React, TailwindCSS, TypeScript.
-*   **Concepto:** Una PWA "Mobile-First" (tipo *Story*). El ciudadano toma hasta 3 fotos, responde un Árbol de Decisión Binario muy simple (Paredes vs Estructura) y el sistema le pre-asigna un nivel de gravedad visual (🟢 🟡 🔴).
-*   **Ubicación:** Carpeta `/frontend`
+#### A. Módulo Profesional: Planilla ATC-20 Digital (Inspección In-Situ)
+*   **Concepto:** Digitalización exacta de la *"Planilla de Evaluación Rápida de Daños en Edificaciones"* (Adaptación Venezolana del ATC-20). Permite a los grupos de ingenieros certificados llenar la evaluación paso a paso en su teléfono, siguiendo el Manual de Entrenamiento oficial, y emitiendo Etiquetas (🟢 Verde, 🟡 Amarilla, 🔴 Roja) ancladas con GPS.
+*   **Ruta Web:** `http://localhost:3000/evaluacion`
+*   **Stack:** Next.js (Server Actions), React, PostgreSQL + PostGIS.
 
-#### 2. Backend Relacional y Panel de Expertos
-*   **Stack:** PostgreSQL + PostGIS (Docker).
-*   **Concepto:** Almacenar el mapa de reportes ciudadanos y sus coordenadas geoespaciales. Desarrollar el backend y la UI de "Evaluación Cruzada" (Triaje Ciego) donde 3 ingenieros voluntarios revisan la misma foto para certificar el nivel de riesgo.
-*   **Ubicación:** Raíz (`docker-compose.yml`, `db_init.sql`)
+#### B. Módulo Ciudadano: Reporte de Fricción Cero
+*   **Concepto:** Una interfaz ultra-simple para que cualquier persona afectada pueda reportar visualmente daños en paredes o estructuras mediante fotografías, proveyendo a los ingenieros de una "primera línea de alerta" antes de la inspección ATC-20.
+*   **Ruta Web:** `http://localhost:3000/`
+*   **Stack:** Next.js, TailwindCSS.
 
-### Fase 2: Auditoría Cívica (Pipeline Anticorrupción)
-*Actualmente en etapa de prueba de concepto.*
-Un módulo en Python (FastAPI + OCR + Neo4j) diseñado para cruzar la ubicación de los daños estructurales verificados con los fondos públicos asignados a contratistas del Estado. Aunque el código base ya está en el repositorio (`/backend`), nuestro foco primario ahora mismo es consolidar la Fase 1 para asistir en la emergencia.
+### Fase 2: Panel de Expertos y Auditoría Cívica
+*   **Panel de Triaje Ciego:** Desarrollo pendiente para que 3 ingenieros validen remotamente las fotografías ciudadanas antes de enviar un equipo in-situ.
+*   **Auditoría Anticorrupción:** Módulo en Python para cruzar ubicaciones de daños con registros públicos. (En prueba de concepto, nuestro foco actual es 100% la recolección de datos vitales).
 
 ## 🛠️ ¿Cómo colaborar?
 
-¡Estamos buscando Desarrolladores Web (React/Next.js), Desarrolladores Backend (Postgres/Python) y, sobre todo, **Ingenieros Civiles / Arquitectos** para calibrar el árbol de decisiones estructurales!
+¡Necesitamos Desarrolladores Web (React/Next.js), Expertos en Bases de Datos (Postgres/PostGIS) y **muy especialmente: Ingenieros Civiles y Arquitectos capacitados en el protocolo ATC-20**!
 
 1.  Asegúrate de tener **Docker** y **Node.js** instalados.
 2.  Clona este repositorio.
-3.  Levanta la base de datos local: `docker compose up -d postgres`
-4.  Levanta el Frontend: `cd frontend && npm install && npm run dev`
-5.  Revisa la pestaña de *Issues* para tomar tareas o proponer mejoras en la interfaz.
+3.  Levanta las bases de datos (PostgreSQL/Neo4j): `docker compose up -d`
+4.  Levanta el servidor web: `cd frontend && npm install && npm run dev`
+5.  Abre `http://localhost:3000/evaluacion` para ver la planilla ATC-20 en acción.
+6.  Revisa los *Issues* en GitHub o abre un *Pull Request* con tus mejoras.
 
 ---
 *Organización ciudadana aplicada a la tecnología.*
