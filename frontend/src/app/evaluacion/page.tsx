@@ -1,11 +1,10 @@
 "use client";
 import { useState } from 'react';
-import Image from 'next/image';
 import { submitATC20Action, ATC20Data } from '@/actions/submitATC20';
 
-type Step = 'INFO' | 'EXTERNA' | 'PISO_CRITICO' | 'MODERADO' | 'RESULT' | 'SUBMITTED';
+type Step = 'INFO' | 'EXTERNA' | 'PISO_CRITICO' | 'MODERADO' | 'NO_ESTRUCTURAL' | 'RESULT' | 'SUBMITTED';
 
-export default function EvaluacionATC20Visual() {
+export default function PlanillaEvaluacionRapida() {
   const [step, setStep] = useState<Step>('INFO');
   const [isSubmitting, setIsSubmitting] = useState(false);
   
@@ -14,6 +13,9 @@ export default function EvaluacionATC20Visual() {
     inspector_cedula: '',
     direccion: '',
     nombre_edificacion: '',
+    uso_predominante: 'Vivienda',
+    numero_pisos: 1,
+    material_predominante: 'Concreto',
     riesgo_externo: 'A',
     piso_critico_riesgo: 'A',
     dano_moderado_riesgo: 'A',
@@ -40,7 +42,7 @@ export default function EvaluacionATC20Visual() {
       const finalData = { ...data, etiqueta_final: calculateFinalTag(), lat, lng } as ATC20Data;
       const result = await submitATC20Action(finalData);
       if (result.success) setStep('SUBMITTED');
-      else alert('Error al guardar.');
+      else alert('Error al guardar en el servidor local.');
       setIsSubmitting(false);
     };
 
@@ -53,66 +55,98 @@ export default function EvaluacionATC20Visual() {
     } else submitToServer(10.4806, -66.9036);
   };
 
+  // UI Components
+  const SectionHeader = ({ title, helpText }: { title: string, helpText: string }) => (
+    <div className="mb-6 border-b border-gray-700 pb-4">
+      <h2 className="text-xl font-bold text-white uppercase tracking-wider">{title}</h2>
+      <div className="bg-blue-900/30 border-l-4 border-blue-500 p-3 mt-3 text-sm text-blue-100">
+        <span className="font-bold mr-2">📘 MANUAL DE ENTRENAMIENTO:</span>
+        {helpText}
+      </div>
+    </div>
+  );
+
   const renderInfo = () => (
     <div className="space-y-4 animate-fade-in">
-      <div className="bg-blue-900/40 p-4 rounded-xl mb-6 border border-blue-500/30">
-        <h2 className="text-xl font-bold text-white flex items-center gap-2">
-          <span>📋</span> Manual FUNVISIS ATC-20
-        </h2>
-        <p className="text-sm text-blue-200 mt-2">Bienvenido a la planilla digital de certificación. Las siguientes pantallas contienen referencias visuales oficiales para guiar su inspección.</p>
+      <SectionHeader 
+        title="1. INFORMACIÓN GENERAL" 
+        helpText="Llenar todos los datos del inspector y de la edificación. Si el dato no se conoce, coloque 'No sabe'. Material predominante: Mampostería informal se entiende viviendas populares." 
+      />
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label className="text-xs text-gray-400 uppercase font-bold">Nombre del Inspector</label>
+          <input type="text" className="w-full p-3 bg-gray-800 border border-gray-600 rounded text-white mt-1" value={data.inspector_nombre} onChange={e => updateData({ inspector_nombre: e.target.value })} />
+        </div>
+        <div>
+          <label className="text-xs text-gray-400 uppercase font-bold">Cédula de Identidad</label>
+          <input type="text" className="w-full p-3 bg-gray-800 border border-gray-600 rounded text-white mt-1" value={data.inspector_cedula} onChange={e => updateData({ inspector_cedula: e.target.value })} />
+        </div>
       </div>
 
-      <input type="text" placeholder="Nombre del Inspector (Certificado)" className="w-full p-4 bg-gray-800 rounded-xl text-white border border-gray-700 focus:border-blue-500" value={data.inspector_nombre} onChange={e => updateData({ inspector_nombre: e.target.value })} />
-      <input type="text" placeholder="Nro. C.I. o CIV" className="w-full p-4 bg-gray-800 rounded-xl text-white border border-gray-700 focus:border-blue-500" value={data.inspector_cedula} onChange={e => updateData({ inspector_cedula: e.target.value })} />
-      
-      <h3 className="text-gray-400 mt-6 font-bold uppercase tracking-wider text-sm">Ubicación del Edificio</h3>
-      <input type="text" placeholder="Dirección exacta o Sector" className="w-full p-4 bg-gray-800 rounded-xl text-white border border-gray-700" value={data.direccion} onChange={e => updateData({ direccion: e.target.value })} />
-      
-      <button onClick={() => handleNext('EXTERNA')} disabled={!data.inspector_nombre || !data.inspector_cedula} className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-5 rounded-xl mt-6 transition-colors disabled:opacity-50">
-        Iniciar Inspección Visual →
+      <div className="mt-6 border-t border-gray-800 pt-4">
+        <h3 className="text-sm font-bold text-gray-300 uppercase mb-3">Datos Generales de la Edificación</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <input type="text" placeholder="Nombre/Nº (Ej: Hotel Macuto)" className="w-full p-3 bg-gray-800 border border-gray-600 rounded text-white" value={data.nombre_edificacion} onChange={e => updateData({ nombre_edificacion: e.target.value })} />
+          <input type="text" placeholder="Sector/Calle/Ciudad" className="w-full p-3 bg-gray-800 border border-gray-600 rounded text-white" value={data.direccion} onChange={e => updateData({ direccion: e.target.value })} />
+          
+          <select className="w-full p-3 bg-gray-800 border border-gray-600 rounded text-white" value={data.uso_predominante} onChange={e => updateData({ uso_predominante: e.target.value })}>
+            <option>Vivienda</option><option>Comercio/Oficina</option><option>Gubernamental</option>
+            <option>Educativo</option><option>Médico/Asistencial</option><option>Seguridad</option>
+          </select>
+          
+          <div className="flex gap-2">
+            <input type="number" placeholder="Nº Pisos" className="w-1/2 p-3 bg-gray-800 border border-gray-600 rounded text-white" value={data.numero_pisos} onChange={e => updateData({ numero_pisos: parseInt(e.target.value) || 1 })} />
+            <select className="w-1/2 p-3 bg-gray-800 border border-gray-600 rounded text-white" value={data.material_predominante} onChange={e => updateData({ material_predominante: e.target.value })}>
+              <option>Concreto</option><option>Acero</option><option>Mampostería formal</option><option>Mampostería informal</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <button onClick={() => handleNext('EXTERNA')} disabled={!data.inspector_nombre || !data.inspector_cedula} className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded mt-6 disabled:opacity-50">
+        Siguiente: Inspección Externa →
       </button>
     </div>
   );
 
   const renderExterna = () => (
     <div className="space-y-4 animate-fade-in pb-10">
-      <h2 className="text-2xl font-bold text-white mb-2">Paso 1: Riesgo Externo</h2>
-      <p className="text-sm text-gray-400 mb-6">Evalúe el colapso o peligro inminente desde el exterior (sin ingresar).</p>
-      
-      <button onClick={() => { updateData({ riesgo_externo: 'C' }); handleNext('RESULT', 'ROJA'); }} className="w-full text-left bg-gray-800 hover:border-red-500 border-2 border-transparent rounded-2xl overflow-hidden group transition-all">
-        <div className="h-40 w-full relative">
-          <Image src="/images/colapso.png" alt="Colapso" fill className="object-cover group-hover:scale-105 transition-transform" />
-          <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/40 to-transparent"></div>
-          <span className="absolute bottom-3 left-4 text-xs font-bold bg-red-600 px-2 py-1 rounded text-white">RIESGO ALTO (C)</span>
-        </div>
-        <div className="p-4">
-          <h3 className="text-white font-bold text-lg">Colapso Total o Parcial</h3>
-          <p className="text-sm text-gray-400 mt-1">Pérdida de capacidad portante, losas aplastadas o derrumbe evidente.</p>
-        </div>
-      </button>
+      <SectionHeader 
+        title="2. INSPECCIÓN EXTERNA" 
+        helpText="Determinar Riesgo Externo (Bajo, Medio, Alto) con base en recorrido alrededor del edificio. 'Peligro geotécnico' incluye agrietamiento del terreno. 'Inclinación' se mide con plomada de 60cm." 
+      />
 
-      <button onClick={() => { updateData({ riesgo_externo: 'C' }); handleNext('RESULT', 'ROJA'); }} className="w-full text-left bg-gray-800 hover:border-red-500 border-2 border-transparent rounded-2xl overflow-hidden group transition-all mt-4">
-        <div className="h-40 w-full relative">
-          <Image src="/images/inclinacion.png" alt="Inclinación" fill className="object-cover group-hover:scale-105 transition-transform" />
-          <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/40 to-transparent"></div>
-          <span className="absolute bottom-3 left-4 text-xs font-bold bg-red-600 px-2 py-1 rounded text-white">RIESGO ALTO (C)</span>
-        </div>
-        <div className="p-4">
-          <h3 className="text-white font-bold text-lg">Inclinación Severa</h3>
-          <p className="text-sm text-gray-400 mt-1">Asentamiento del terreno con inclinación mayor a 2cm/60cm o hundimiento mayor a 1m.</p>
-        </div>
-      </button>
-
-      <div className="grid grid-cols-2 gap-4 mt-6">
-        <button onClick={() => { updateData({ riesgo_externo: 'B' }); handleNext('PISO_CRITICO'); }} className="p-4 bg-gray-800 hover:border-yellow-500 border-2 border-transparent rounded-xl text-center">
-          <span className="text-3xl block mb-2">⚠️</span>
-          <h3 className="text-yellow-400 font-bold">Riesgo Medio (B)</h3>
-          <p className="text-xs text-gray-400 mt-1">Asentamiento leve ‹ 20cm</p>
+      <div className="space-y-3">
+        <button onClick={() => { updateData({ riesgo_externo: 'A' }); handleNext('PISO_CRITICO'); }} className="w-full text-left p-4 bg-gray-800 hover:bg-gray-700 border border-gray-600 rounded">
+          <h3 className="text-green-400 font-bold uppercase">a. Bajo (Todos 'a')</h3>
+          <ul className="text-xs text-gray-300 mt-2 list-disc list-inside ml-4">
+            <li>Colapso: No</li>
+            <li>Peligro aledaños: No</li>
+            <li>Asentamiento: No</li>
+          </ul>
         </button>
-        <button onClick={() => { updateData({ riesgo_externo: 'A' }); handleNext('PISO_CRITICO'); }} className="p-4 bg-gray-800 hover:border-green-500 border-2 border-transparent rounded-xl text-center">
-          <span className="text-3xl block mb-2">✅</span>
-          <h3 className="text-green-400 font-bold">Riesgo Bajo (A)</h3>
-          <p className="text-xs text-gray-400 mt-1">Estructura externa intacta</p>
+
+        <button onClick={() => { updateData({ riesgo_externo: 'B' }); handleNext('PISO_CRITICO'); }} className="w-full text-left p-4 bg-gray-800 hover:bg-gray-700 border border-gray-600 rounded">
+          <h3 className="text-yellow-400 font-bold uppercase">b. Medio (Al menos un 'b')</h3>
+          <ul className="text-xs text-gray-300 mt-2 list-disc list-inside ml-4">
+            <li>Peligro aledaños o geológico: Moderado</li>
+            <li>Asentamiento: Hasta 20 cm</li>
+            <li>Inclinación: Hasta 2cm/60cm</li>
+          </ul>
+        </button>
+
+        <button onClick={() => { updateData({ riesgo_externo: 'C' }); handleNext('RESULT', 'ROJA'); }} className="w-full text-left p-4 bg-red-900/30 hover:bg-red-900/50 border border-red-800 rounded">
+          <h3 className="text-red-400 font-bold uppercase">c. Alto (Al menos un 'c')</h3>
+          <div className="bg-red-950/50 text-red-200 text-xs p-2 mt-2 border-l-2 border-red-500">
+            Si cataloga como C. Alto, no continúe inspección interna. Vaya al punto 6 y coloque Etiqueta Roja.
+          </div>
+          <ul className="text-xs text-gray-300 mt-2 list-disc list-inside ml-4">
+            <li>Colapso: Posible, Parcial o Total</li>
+            <li>Peligro geológico: Elevado</li>
+            <li>Asentamiento: ˃ 20 cm</li>
+            <li>Inclinación: Mayor que 2cm/60cm</li>
+          </ul>
         </button>
       </div>
     </div>
@@ -120,107 +154,122 @@ export default function EvaluacionATC20Visual() {
 
   const renderPisoCritico = () => (
     <div className="space-y-4 animate-fade-in pb-10">
-      <button onClick={() => setStep('EXTERNA')} className="text-sm text-blue-400 mb-2 hover:underline">← Atrás</button>
-      <h2 className="text-2xl font-bold text-white mb-2">Paso 2: Piso Crítico</h2>
-      <p className="text-sm text-gray-400 mb-6">Inspección de elementos estructurales principales con Daño Severo o Completo.</p>
-      
-      <button onClick={() => { updateData({ piso_critico_riesgo: 'C' }); handleNext('RESULT', 'ROJA'); }} className="w-full text-left bg-gray-800 hover:border-red-500 border-2 border-transparent rounded-2xl overflow-hidden group transition-all">
-        <div className="h-48 w-full relative">
-          <Image src="/images/columna_severo.png" alt="Columna" fill className="object-cover group-hover:scale-105 transition-transform" />
-          <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/40 to-transparent"></div>
-          <span className="absolute bottom-3 left-4 text-xs font-bold bg-red-600 px-2 py-1 rounded text-white">DAÑO SEVERO (C)</span>
-        </div>
-        <div className="p-4">
-          <h3 className="text-white font-bold text-lg">Falla en Columnas / Vigas</h3>
-          <p className="text-sm text-gray-400 mt-1">Pérdida de recubrimiento amplia, pandeo de acero expuesto, aplastamiento del concreto.</p>
-        </div>
-      </button>
+      <SectionHeader 
+        title="3. PISO CRÍTICO Y DAÑO SEVERO" 
+        helpText="Identifique el piso con mayor concentración de daños. Examine columnas, uniones, muros de carga. Cuente elementos con daño SEVERO o COMPLETO (Pandeo de barras, caída de concreto, grietas en X > 3mm)." 
+      />
 
-      <button onClick={() => { updateData({ piso_critico_riesgo: 'C' }); handleNext('RESULT', 'ROJA'); }} className="w-full text-left bg-gray-800 hover:border-red-500 border-2 border-transparent rounded-2xl overflow-hidden group transition-all mt-4">
-        <div className="h-48 w-full relative">
-          <Image src="/images/muro_severo.png" alt="Muro" fill className="object-cover group-hover:scale-105 transition-transform" />
-          <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/40 to-transparent"></div>
-          <span className="absolute bottom-3 left-4 text-xs font-bold bg-red-600 px-2 py-1 rounded text-white">DAÑO SEVERO (C)</span>
-        </div>
-        <div className="p-4">
-          <h3 className="text-white font-bold text-lg">Falla en Muros Portantes</h3>
-          <p className="text-sm text-gray-400 mt-1">Grietas anchas profundas (X) mayores a 3mm, dislocación de piezas, desplome parcial.</p>
-        </div>
-      </button>
+      <div className="space-y-3">
+        <button onClick={() => { updateData({ piso_critico_riesgo: 'A' }); handleNext('MODERADO'); }} className="w-full text-left p-4 bg-gray-800 hover:bg-gray-700 border border-gray-600 rounded">
+          <h3 className="text-green-400 font-bold uppercase">Sin Daño Severo/Completo (N=0)</h3>
+          <p className="text-xs text-gray-300 mt-1">Continuar inspección al Punto 4.</p>
+        </button>
 
-      <button onClick={() => { updateData({ piso_critico_riesgo: 'A' }); handleNext('MODERADO'); }} className="w-full p-5 bg-gray-800 hover:border-green-500 border-2 border-transparent rounded-xl mt-6 text-center shadow-lg">
-        <span className="text-green-400 font-bold text-lg block">Sin Daño Severo (Continuar)</span>
-        <span className="text-xs text-gray-400">Ningún elemento principal está comprometido.</span>
-      </button>
+        <button onClick={() => { updateData({ piso_critico_riesgo: 'C' }); handleNext('RESULT', 'ROJA'); }} className="w-full text-left p-4 bg-red-900/30 hover:bg-red-900/50 border border-red-800 rounded">
+          <h3 className="text-red-400 font-bold uppercase">C. Alto (N ≥ 1 elemento severo)</h3>
+          <div className="bg-red-950/50 text-red-200 text-xs p-2 mt-2 border-l-2 border-red-500">
+            Si cataloga como C. Alto, no continúe inspección. Vaya al punto 6 y coloque Etiqueta Roja.
+          </div>
+        </button>
+      </div>
     </div>
   );
 
   const renderModerado = () => (
     <div className="space-y-4 animate-fade-in pb-10">
-      <button onClick={() => setStep('PISO_CRITICO')} className="text-sm text-blue-400 mb-2 hover:underline">← Atrás</button>
-      <h2 className="text-2xl font-bold text-white mb-2">Paso 3: Daño Moderado</h2>
-      <p className="text-sm text-gray-400 mb-6">Calcule el porcentaje (%) de elementos estructurales con daño moderado (grietas finas de 1 a 2mm).</p>
-      
-      <button onClick={() => { updateData({ dano_moderado_riesgo: 'A' }); handleNext('RESULT'); }} className="w-full p-6 bg-gray-800 hover:border-green-500 border-2 border-transparent rounded-2xl flex items-center justify-between">
-        <div>
-          <h3 className="text-green-400 font-bold text-xl">Riesgo Bajo (A)</h3>
-          <p className="text-sm text-gray-400 mt-1">Menos del 10% de elementos</p>
-        </div>
-        <span className="text-4xl">🟢</span>
-      </button>
+      <SectionHeader 
+        title="4. INSPECCIÓN DAÑO MODERADO" 
+        helpText="Calcule el % de elementos con daño Moderado (Grietas 1-2mm en columnas/vigas, o agrietamiento diagonal incipiente en muros)." 
+      />
 
-      <button onClick={() => { updateData({ dano_moderado_riesgo: 'B' }); handleNext('RESULT'); }} className="w-full p-6 bg-gray-800 hover:border-yellow-500 border-2 border-transparent rounded-2xl flex items-center justify-between">
-        <div>
-          <h3 className="text-yellow-400 font-bold text-xl">Riesgo Medio (B)</h3>
-          <p className="text-sm text-gray-400 mt-1">Entre 10% y 30% de elementos</p>
-        </div>
-        <span className="text-4xl">🟡</span>
-      </button>
+      <div className="space-y-3">
+        <button onClick={() => { updateData({ dano_moderado_riesgo: 'A' }); handleNext('NO_ESTRUCTURAL'); }} className="w-full text-left p-4 bg-gray-800 hover:bg-gray-700 border border-gray-600 rounded">
+          <h3 className="text-green-400 font-bold uppercase">A. Bajo ( ‹ 10% )</h3>
+          <p className="text-xs text-gray-300 mt-1">% de elementos con daño moderado es menor al 10%.</p>
+        </button>
+        <button onClick={() => { updateData({ dano_moderado_riesgo: 'B' }); handleNext('NO_ESTRUCTURAL'); }} className="w-full text-left p-4 bg-gray-800 hover:bg-gray-700 border border-gray-600 rounded">
+          <h3 className="text-yellow-400 font-bold uppercase">B. Medio ( 10% - 30% )</h3>
+          <p className="text-xs text-gray-300 mt-1">% de elementos con daño moderado varía entre 10% y 30%.</p>
+        </button>
+        <button onClick={() => { updateData({ dano_moderado_riesgo: 'C' }); handleNext('NO_ESTRUCTURAL'); }} className="w-full text-left p-4 bg-gray-800 hover:bg-gray-700 border border-gray-600 rounded">
+          <h3 className="text-red-400 font-bold uppercase">C. Alto ( ˃ 30% )</h3>
+          <p className="text-xs text-gray-300 mt-1">% de elementos con daño moderado es mayor al 30%.</p>
+        </button>
+      </div>
+    </div>
+  );
 
-      <button onClick={() => { updateData({ dano_moderado_riesgo: 'C' }); handleNext('RESULT'); }} className="w-full p-6 bg-gray-800 hover:border-red-500 border-2 border-transparent rounded-2xl flex items-center justify-between">
-        <div>
-          <h3 className="text-red-400 font-bold text-xl">Riesgo Alto (C)</h3>
-          <p className="text-sm text-gray-400 mt-1">Más del 30% de elementos</p>
-        </div>
-        <span className="text-4xl">🔴</span>
-      </button>
+  const renderNoEstructural = () => (
+    <div className="space-y-4 animate-fade-in pb-10">
+      <SectionHeader 
+        title="5. COMPONENTES NO ESTRUCTURALES" 
+        helpText="Evaluar Paredes de relleno, escaleras, tanques, gas, electricidad. Riesgo de caída compromete la seguridad." 
+      />
+
+      <div className="space-y-3">
+        <button onClick={() => { updateData({ no_estructural_riesgo: 'A' }); handleNext('RESULT'); }} className="w-full text-left p-4 bg-gray-800 hover:bg-gray-700 border border-gray-600 rounded">
+          <h3 className="text-green-400 font-bold uppercase">A. Bajo (Sin daño)</h3>
+          <p className="text-xs text-gray-300 mt-1">Grietas muy pequeñas ‹ 1mm de espesor en paredes.</p>
+        </button>
+        <button onClick={() => { updateData({ no_estructural_riesgo: 'B' }); handleNext('RESULT'); }} className="w-full text-left p-4 bg-gray-800 hover:bg-gray-700 border border-gray-600 rounded">
+          <h3 className="text-yellow-400 font-bold uppercase">B. Medio (b ≥ 2)</h3>
+          <p className="text-xs text-gray-300 mt-1">Grietas de varios mm/cm. Separación de pared. Fuga de gas reparable.</p>
+        </button>
+        <button onClick={() => { updateData({ no_estructural_riesgo: 'C' }); handleNext('RESULT'); }} className="w-full text-left p-4 bg-gray-800 hover:bg-gray-700 border border-gray-600 rounded">
+          <h3 className="text-red-400 font-bold uppercase">C. Alto (c ≥ 1)</h3>
+          <p className="text-xs text-gray-300 mt-1">Derrumbe de paredes. Riesgo de colapso de escaleras/balcones.</p>
+        </button>
+      </div>
     </div>
   );
 
   const renderResult = () => {
     const finalTag = calculateFinalTag();
     return (
-      <div className="p-6 text-center animate-fade-in flex flex-col justify-center h-full">
-        <p className="text-gray-400 text-sm mb-4 uppercase tracking-widest">Resultado del Algoritmo</p>
+      <div className="p-4 animate-fade-in flex flex-col justify-center h-full">
+        <h2 className="text-xl font-bold text-white mb-6 text-center">6. RECOMENDACIÓN DE ACCESO</h2>
         
         {finalTag === 'VERDE' && (
-          <div className="bg-green-600 p-10 rounded-3xl shadow-[0_0_50px_rgba(22,163,74,0.3)] border-4 border-green-400 relative overflow-hidden">
-            <span className="absolute -top-10 -right-10 text-9xl opacity-20">✅</span>
-            <h1 className="text-5xl font-black text-white mb-2 tracking-tighter">VERDE</h1>
-            <p className="text-green-100 font-bold text-xl uppercase tracking-widest">Acceso Permitido</p>
-            <p className="text-sm text-green-200 mt-4">Habitable. Riesgo estructural bajo.</p>
+          <div className="bg-green-600 p-6 border-2 border-green-800 flex flex-col h-64">
+            <div className="flex justify-between items-start">
+              <div className="w-16 h-16 rounded-full border-2 border-white flex items-center justify-center">🇻🇪</div>
+              <div className="text-right">
+                <h1 className="text-3xl font-black text-white">HABITABLE</h1>
+                <p className="text-white font-bold uppercase text-sm">ACCESO PERMITIDO</p>
+              </div>
+            </div>
+            <div className="mt-auto text-xs text-white">Esta estructura ha sido inspeccionada y aparentemente no se han encontrado daños estructurales. NO REMUEVA, ALTERE O CUBRA ESTA ETIQUETA.</div>
           </div>
         )}
+        
         {finalTag === 'AMARILLA' && (
-          <div className="bg-yellow-500 p-10 rounded-3xl shadow-[0_0_50px_rgba(234,179,8,0.3)] border-4 border-yellow-300 relative overflow-hidden">
-            <span className="absolute -top-10 -right-10 text-9xl opacity-20">⚠️</span>
-            <h1 className="text-5xl font-black text-black mb-2 tracking-tighter">AMARILLA</h1>
-            <p className="text-yellow-900 font-bold text-xl uppercase tracking-widest">Acceso Restringido</p>
-            <p className="text-sm text-yellow-800 mt-4">Requiere reparaciones o apuntalamiento.</p>
-          </div>
-        )}
-        {finalTag === 'ROJA' && (
-          <div className="bg-red-600 p-10 rounded-3xl shadow-[0_0_50px_rgba(220,38,38,0.4)] border-4 border-red-400 relative overflow-hidden">
-            <span className="absolute -top-10 -right-10 text-9xl opacity-20">🛑</span>
-            <h1 className="text-5xl font-black text-white mb-2 tracking-tighter">ROJA</h1>
-            <p className="text-red-100 font-bold text-xl uppercase tracking-widest">No Entre Ni Ocupe</p>
-            <p className="text-sm text-red-200 mt-4">Peligro inminente de colapso. Acordonar el área.</p>
+          <div className="bg-yellow-400 p-6 border-2 border-yellow-600 flex flex-col h-64 text-black">
+            <div className="flex justify-between items-start">
+              <div className="w-16 h-16 rounded-full border-2 border-black flex items-center justify-center">🇻🇪</div>
+              <div className="text-right">
+                <h1 className="text-3xl font-black text-black">ATENCIÓN</h1>
+                <p className="text-black font-bold uppercase text-sm">USO RESTRINGIDO</p>
+              </div>
+            </div>
+            <div className="mt-auto text-xs font-medium">Esta estructura ha sido inspeccionada y se han encontrado daños. La entrada, ocupación y uso legal serán restringidos. NO REMUEVA ESTA ETIQUETA.</div>
           </div>
         )}
 
-        <button onClick={handleSubmit} disabled={isSubmitting} className="w-full bg-white text-black font-bold py-5 rounded-2xl mt-12 shadow-xl hover:scale-105 transition-transform flex justify-center items-center gap-2 text-lg disabled:opacity-50 disabled:scale-100">
-          {isSubmitting ? 'Firmando y Guardando...' : 'Emitir Certificado Oficial'}
-          <span>{isSubmitting ? '⏳' : '📝'}</span>
+        {finalTag === 'ROJA' && (
+          <div className="bg-red-600 p-6 border-2 border-red-800 flex flex-col h-64">
+            <div className="flex justify-between items-start">
+              <div className="w-16 h-16 rounded-full border-2 border-white flex items-center justify-center">🇻🇪</div>
+              <div className="text-right">
+                <h1 className="text-3xl font-black text-white">PELIGRO</h1>
+                <p className="text-white font-bold uppercase text-sm">NO ENTRE NI OCUPE</p>
+              </div>
+            </div>
+            <div className="mt-auto text-xs text-white font-medium">Esta estructura ha sido inspeccionada encontrándose daños severos y es insegura para ser ocupada. No entre. NO REMUEVA ESTA ETIQUETA.</div>
+          </div>
+        )}
+
+        <button onClick={handleSubmit} disabled={isSubmitting} className="w-full bg-blue-600 text-white font-bold py-4 rounded mt-8">
+          {isSubmitting ? 'Guardando Oficialmente...' : 'Guardar Evaluación Oficial'}
         </button>
       </div>
     );
@@ -228,34 +277,29 @@ export default function EvaluacionATC20Visual() {
 
   const renderSubmitted = () => (
     <div className="p-6 text-center animate-fade-in flex flex-col justify-center items-center h-full">
-      <div className="text-8xl mb-6 drop-shadow-xl animate-bounce-short">🎖️</div>
-      <h2 className="text-3xl font-bold text-white mb-2">Planilla Procesada</h2>
-      <p className="text-gray-400 mb-8 max-w-sm">La evaluación ha sido anclada geográficamente y guardada en el Registro Oficial Post-Sismo.</p>
-      
-      <div className="bg-gray-800 w-full p-4 rounded-xl mb-8 flex justify-between items-center">
-        <span className="text-gray-400 text-sm">Etiqueta Emitida:</span>
-        <span className={`font-bold px-3 py-1 rounded text-sm ${data.etiqueta_final === 'ROJA' ? 'bg-red-600 text-white' : data.etiqueta_final === 'AMARILLA' ? 'bg-yellow-500 text-black' : 'bg-green-600 text-white'}`}>{calculateFinalTag()}</span>
-      </div>
-
-      <button onClick={() => window.location.reload()} className="text-blue-400 font-bold hover:text-white transition-colors">
-        + Realizar Nueva Inspección
+      <div className="text-6xl mb-6">📝</div>
+      <h2 className="text-2xl font-bold text-white mb-2">Planilla Guardada</h2>
+      <p className="text-gray-400 text-sm mb-8">La Planilla de Evaluación Rápida ha sido enviada al servidor central.</p>
+      <button onClick={() => window.location.reload()} className="text-blue-400 font-bold border border-blue-400 px-6 py-2 rounded">
+        Siguiente Inspección
       </button>
     </div>
   );
 
   return (
-    <main className="min-h-screen bg-black text-gray-100 font-sans flex flex-col items-center justify-center p-0 md:p-4">
-      <div className="w-full max-w-md h-screen md:h-[850px] bg-gray-900 md:rounded-3xl shadow-2xl overflow-hidden flex flex-col relative">
-        <div className="bg-blue-900 p-4 flex justify-between items-center shrink-0 border-b border-blue-800">
-          <div className="font-black tracking-widest text-blue-100">RECONSTRUYE<span className="text-yellow-500">.VE</span></div>
-          <div className="text-xs bg-blue-950 px-2 py-1 rounded text-blue-300 font-mono">ID: {data.inspector_cedula || 'N/A'}</div>
+    <main className="min-h-screen bg-[#1e1e1e] text-gray-100 font-sans p-0 md:p-6 flex justify-center">
+      <div className="w-full max-w-2xl bg-[#121212] md:rounded shadow-2xl overflow-hidden flex flex-col border border-gray-800">
+        <div className="bg-black p-4 border-b border-gray-800 text-center">
+          <h1 className="text-lg font-bold text-white uppercase">EVALUACIÓN RÁPIDA DE DAÑOS EN EDIFICACIONES</h1>
+          <p className="text-xs text-gray-500">Formato Digital Adaptado - Metodología Oficial</p>
         </div>
         
-        <div className="flex-1 overflow-y-auto p-4 md:p-6 pb-20 scroll-smooth">
+        <div className="flex-1 overflow-y-auto p-4 md:p-8">
           {step === 'INFO' && renderInfo()}
           {step === 'EXTERNA' && renderExterna()}
           {step === 'PISO_CRITICO' && renderPisoCritico()}
           {step === 'MODERADO' && renderModerado()}
+          {step === 'NO_ESTRUCTURAL' && renderNoEstructural()}
           {step === 'RESULT' && renderResult()}
           {step === 'SUBMITTED' && renderSubmitted()}
         </div>
