@@ -11,7 +11,7 @@ Frente a la emergencia, la organización civil guiada por el rigor técnico es n
 El sistema está diseñado para capturar la realidad del terreno en dos niveles, utilizando un enfoque **Offline-First**, captura de **Evidencia Fotográfica** y **PostGIS** para el análisis geoespacial.
 
 ### A. Módulo Profesional: Planilla ATC-20 Digital (Inspección In-Situ)
-![Ingeniero Evaluacion](docs/evaluacion_real.png)
+[📄 **Ver Formulario Final Digitalizado (PDF)**](docs/Planilla_ATC20_Final.pdf)
 *   **Concepto:** Digitalización *línea por línea* de la "Planilla de Evaluación Rápida de Daños en Edificaciones". Ya no es un asistente, es una **Planilla Vertical Oficial** (Checklist) donde el ingeniero marca cada daño estructural (colapso, columnas, muros) y añade **Anotaciones** libres.
 *   **Algoritmo en Vivo:** El sistema calcula automáticamente el Nivel de Riesgo (Bajo, Medio, Alto) por sección y sugiere la **Etiqueta Final (🟢 🟡 🔴)** según el protocolo oficial.
 *   **Evidencia Oficial:** Permite al ingeniero capturar y adjuntar hasta 5 fotografías oficiales de los daños.
