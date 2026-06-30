@@ -26,13 +26,6 @@ El sistema está diseñado para capturar la realidad del terreno en dos niveles,
 *   **Micro-Guía Fotográfica:** Enseña al ciudadano cómo tomar fotos útiles (Max. 5) antes de enviarlas (Ej. *"Una general, una de la grieta, evite fotos borrosas"*).
 *   **Ruta Web:** `/solicitud`
 
-### C. Data Lake & Inteligencia (OSINT y Personas Desaparecidas)
-*   **Concepto:** Un ecosistema de *scrapers* y consolidación de datos que unifica la información fragmentada de múltiples iniciativas ciudadanas (Venezuela Se Busca, Google Sheets colaborativos, OSINT de Hospitales, etc.).
-*   **¿Cómo ayuda a otras páginas?** En lugar de que cada iniciativa ciudadana tenga que programar su propia base de datos o copiar datos a mano, pueden **consumir nuestra API abierta** para mostrar listas unificadas, actualizadas y depuradas de personas desaparecidas o rescatadas.
-*   **¿Qué pueden hacer los desarrolladores?** 
-    - En la carpeta `/data_lake/scripts` encontrarán bots en Python y Node.js diseñados para extraer, limpiar y normalizar datos de redes sociales y hojas de cálculo.
-    - Pueden contribuir creando nuevos *scrapers* (ej. para X/Twitter o nuevos Google Sheets) o consumiendo el endpoint `/api/inteligencia` para alimentar sus propios mapas o interfaces.
-
 ## 🛠️ Despliegue en Producción (¿Cómo usar esto en la vida real?)
 
 Este repositorio contiene todo el código listo para funcionar. Si eres un grupo de rescate, una ONG o un grupo de ingenieros voluntarios, así es como debes **activar el uso de esta plataforma**:
