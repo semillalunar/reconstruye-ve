@@ -19,7 +19,11 @@ export default async function AdminCondominio() {
         descripcion_dano, 
         hay_heridos, 
         evidencia_fotografica,
-        creado_en
+        creado_en,
+        numero_apartamento,
+        numero_personas,
+        numero_ninos,
+        numero_adultos_mayores
       FROM solicitudes_inspeccion 
       ORDER BY creado_en DESC
     `);
@@ -54,7 +58,7 @@ export default async function AdminCondominio() {
             <div key={sol.id} className={`bg-white rounded-2xl shadow-md overflow-hidden border-t-4 ${sol.hay_heridos ? 'border-red-500' : 'border-blue-500'}`}>
               <div className="p-5">
                 <div className="flex justify-between items-start mb-2">
-                  <h2 className="text-xl font-bold text-gray-900">{sol.direccion_exacta}</h2>
+                  <h2 className="text-xl font-bold text-gray-900">{sol.numero_apartamento ? sol.numero_apartamento : sol.direccion_exacta}</h2>
                   {sol.hay_heridos && (
                     <span className="bg-red-100 text-red-800 text-xs font-black px-2 py-1 rounded-full uppercase tracking-wider">
                       Urgente (Heridos)
@@ -64,6 +68,14 @@ export default async function AdminCondominio() {
                 <p className="text-sm text-gray-500 mb-4">{sol.tipo_edificacion}</p>
                 
                 <div className="space-y-3">
+                  
+                  {/* Etiqueta del Censo */}
+                  <div className="bg-blue-50 border border-blue-100 p-2 rounded-lg flex justify-between text-xs text-blue-800 font-medium">
+                    <div><span className="font-bold">👥 Hab:</span> {sol.numero_personas || 0}</div>
+                    <div><span className="font-bold">👦 Niños:</span> {sol.numero_ninos || 0}</div>
+                    <div><span className="font-bold">👴 Abuelos:</span> {sol.numero_adultos_mayores || 0}</div>
+                  </div>
+
                   <div>
                     <h3 className="text-xs uppercase font-bold text-gray-400 tracking-wider">Reportado por</h3>
                     <p className="text-gray-800 font-medium">{sol.nombre_contacto}</p>

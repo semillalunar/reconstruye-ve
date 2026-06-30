@@ -6,6 +6,10 @@ export type SolicitudData = {
   nombre_contacto: string;
   telefono_contacto: string;
   direccion_exacta: string;
+  numero_apartamento?: string;
+  numero_personas?: number;
+  numero_ninos?: number;
+  numero_adultos_mayores?: number;
   tipo_edificacion: string;
   descripcion_dano: string;
   hay_heridos: boolean;
@@ -19,10 +23,12 @@ export async function submitSolicitudAction(data: SolicitudData) {
     const query = `
       INSERT INTO solicitudes_inspeccion (
         nombre_contacto, telefono_contacto, direccion_exacta,
-        tipo_edificacion, descripcion_dano, hay_heridos, coordenadas, evidencia_fotografica
+        tipo_edificacion, descripcion_dano, hay_heridos, coordenadas, evidencia_fotografica,
+        numero_apartamento, numero_personas, numero_ninos, numero_adultos_mayores
       ) 
       VALUES (
-        $1, $2, $3, $4, $5, $6, ST_SetSRID(ST_MakePoint($7, $8), 4326), $9
+        $1, $2, $3, $4, $5, $6, ST_SetSRID(ST_MakePoint($7, $8), 4326), $9,
+        $10, $11, $12, $13
       )
       RETURNING id
     `;
@@ -36,7 +42,11 @@ export async function submitSolicitudAction(data: SolicitudData) {
       data.hay_heridos,
       data.lng,
       data.lat,
-      data.evidencia_fotografica
+      data.evidencia_fotografica,
+      data.numero_apartamento || null,
+      data.numero_personas || 0,
+      data.numero_ninos || 0,
+      data.numero_adultos_mayores || 0
     ];
 
     const result = await pool.query(query, values);

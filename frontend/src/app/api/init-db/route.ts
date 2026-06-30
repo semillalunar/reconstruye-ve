@@ -14,8 +14,17 @@ export async function GET() {
         hay_heridos BOOLEAN DEFAULT FALSE,
         coordenadas GEOMETRY(Point, 4326),
         evidencia_fotografica JSONB,
-        creado_en TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        creado_en TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        numero_apartamento VARCHAR(50),
+        numero_personas INTEGER DEFAULT 0,
+        numero_ninos INTEGER DEFAULT 0,
+        numero_adultos_mayores INTEGER DEFAULT 0
       );
+
+      ALTER TABLE solicitudes_inspeccion ADD COLUMN IF NOT EXISTS numero_apartamento VARCHAR(50);
+      ALTER TABLE solicitudes_inspeccion ADD COLUMN IF NOT EXISTS numero_personas INTEGER DEFAULT 0;
+      ALTER TABLE solicitudes_inspeccion ADD COLUMN IF NOT EXISTS numero_ninos INTEGER DEFAULT 0;
+      ALTER TABLE solicitudes_inspeccion ADD COLUMN IF NOT EXISTS numero_adultos_mayores INTEGER DEFAULT 0;
     `;
     
     await pool.query(query);

@@ -10,8 +10,12 @@ export default function SolicitudInspeccion() {
   const [data, setData] = useState<Partial<SolicitudData>>({
     nombre_contacto: '',
     telefono_contacto: '',
-    direccion_exacta: '',
-    tipo_edificacion: 'Casa',
+    direccion_exacta: 'Torre/Edificio del Condominio',
+    numero_apartamento: '',
+    numero_personas: 0,
+    numero_ninos: 0,
+    numero_adultos_mayores: 0,
+    tipo_edificacion: 'Edificio Residencial',
     descripcion_dano: '',
     hay_heridos: false,
     evidencia_fotografica: []
@@ -127,9 +131,24 @@ export default function SolicitudInspeccion() {
           </div>
 
           <div>
-            <label className="block text-gray-700 font-bold mb-2">Torre / Piso / Nro. de Apartamento</label>
-            <textarea required className="w-full p-3 bg-gray-50 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all h-20" placeholder="Ej: Torre A, Piso 4, Apto 4B. (O indique Área Común: Ej. Estacionamiento)" value={data.direccion_exacta} onChange={e => updateData({ direccion_exacta: e.target.value })}></textarea>
+            <label className="block text-gray-700 font-bold mb-2">Número de Apartamento (o indique si es Área Común)</label>
+            <input required type="text" className="w-full p-3 bg-gray-50 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all" placeholder="Ej: Torre A, Apto 4B / Estacionamiento" value={data.numero_apartamento} onChange={e => updateData({ numero_apartamento: e.target.value })} />
             <p className="text-xs text-gray-500 mt-2">📍 Tu teléfono también guardará la coordenada GPS exacta al enviar.</p>
+          </div>
+
+          <div className="grid grid-cols-3 gap-4 bg-gray-50 p-4 rounded-xl border border-gray-200">
+            <div>
+              <label className="block text-gray-700 font-bold mb-2 text-xs">Total Habitantes</label>
+              <input required type="number" min="0" className="w-full p-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" value={data.numero_personas === 0 ? '' : data.numero_personas} onChange={e => updateData({ numero_personas: parseInt(e.target.value) || 0 })} placeholder="0" />
+            </div>
+            <div>
+              <label className="block text-gray-700 font-bold mb-2 text-xs">Cant. Niños</label>
+              <input required type="number" min="0" className="w-full p-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" value={data.numero_ninos === 0 ? '' : data.numero_ninos} onChange={e => updateData({ numero_ninos: parseInt(e.target.value) || 0 })} placeholder="0" />
+            </div>
+            <div>
+              <label className="block text-gray-700 font-bold mb-2 text-xs">Adultos Mayores</label>
+              <input required type="number" min="0" className="w-full p-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" value={data.numero_adultos_mayores === 0 ? '' : data.numero_adultos_mayores} onChange={e => updateData({ numero_adultos_mayores: parseInt(e.target.value) || 0 })} placeholder="0" />
+            </div>
           </div>
 
           <div>
@@ -145,7 +164,7 @@ export default function SolicitudInspeccion() {
               <br/>2. Una foto de la grieta o daño principal.
               <br/>3. Evite fotos borrosas.
             </p>
-            <input type="file" accept="image/*" multiple onChange={handleFileChange} className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-100 file:text-blue-700 hover:file:bg-blue-200" />
+            <input type="file" accept="image/*" capture="environment" multiple onChange={handleFileChange} className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-100 file:text-blue-700 hover:file:bg-blue-200" />
             
             {previewImages.length > 0 && (
               <div className="flex gap-2 mt-4 overflow-x-auto pb-2">
