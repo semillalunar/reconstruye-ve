@@ -91,9 +91,9 @@ export default function SolicitudInspeccion() {
     <main className="min-h-screen bg-blue-900 flex flex-col items-center py-10 px-4">
       
       <div className="w-full max-w-lg mb-6 text-center">
-        <h1 className="text-3xl font-black text-white tracking-wide mb-2">Solicitar Inspección</h1>
+        <h1 className="text-3xl font-black text-white tracking-wide mb-2">Reporte de Daños - Condominio</h1>
         <p className="text-blue-200">
-          Si su vivienda o edificio presenta grietas graves, hundimientos o daños tras el sismo, llene este formulario para que ingenieros voluntarios puedan acudir a evaluarlo.
+          Si su apartamento o las áreas comunes presentan grietas graves o daños tras el sismo, llene este reporte para que la Junta de Condominio pueda organizar las evaluaciones.
         </p>
       </div>
 
@@ -127,8 +127,8 @@ export default function SolicitudInspeccion() {
           </div>
 
           <div>
-            <label className="block text-gray-700 font-bold mb-2">Dirección Exacta</label>
-            <textarea required className="w-full p-3 bg-gray-50 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all h-20" placeholder="Ej: Sector El Carmen, Calle 4, Casa Nro 12. Punto de referencia: Frente a la panadería." value={data.direccion_exacta} onChange={e => updateData({ direccion_exacta: e.target.value })}></textarea>
+            <label className="block text-gray-700 font-bold mb-2">Torre / Piso / Nro. de Apartamento</label>
+            <textarea required className="w-full p-3 bg-gray-50 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all h-20" placeholder="Ej: Torre A, Piso 4, Apto 4B. (O indique Área Común: Ej. Estacionamiento)" value={data.direccion_exacta} onChange={e => updateData({ direccion_exacta: e.target.value })}></textarea>
             <p className="text-xs text-gray-500 mt-2">📍 Tu teléfono también guardará la coordenada GPS exacta al enviar.</p>
           </div>
 
