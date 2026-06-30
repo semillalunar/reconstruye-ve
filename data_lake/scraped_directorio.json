@@ -1,0 +1,326 @@
+[
+  {
+    "id": "ent-0-1782589869879",
+    "nombre": "Hospitales en Venezuela",
+    "categoria": "Salud",
+    "descripcion": "Busca a tus familiares en los centros de salud. Consulta qué hospitales y clínicas tienen pacientes ingresados tras el terremoto.",
+    "url_externa": "https://hospitalesenvenezuela.com/",
+    "esOrganizacion": false,
+    "extraida_en": "2026-06-27T19:51:09.879Z"
+  },
+  {
+    "id": "ent-1-1782589869880",
+    "nombre": "Lista de Ingresados en Hospitales",
+    "categoria": "Salud",
+    "descripcion": "Listado de personas ingresadas en centros de salud tras el terremoto. Consulta si un familiar está hospitalizado.",
+    "url_externa": "https://drive.google.com/drive/folders/1o36ifaRz45kAs5rKzci49aD0mP5JB_YI",
+    "esOrganizacion": false,
+    "extraida_en": "2026-06-27T19:51:09.880Z"
+  },
+  {
+    "id": "ent-2-1782589869880",
+    "nombre": "Escucha Activa – Apoyo Psicológico",
+    "categoria": "Salud Mental",
+    "descripcion": "Asistencia psicológica gratuita para personas afectadas por el terremoto. Psicólogos voluntarios disponibles para escucharte y acompañarte.",
+    "url_externa": "https://escuchactiva.com/",
+    "esOrganizacion": false,
+    "extraida_en": "2026-06-27T19:51:09.880Z"
+  },
+  {
+    "id": "ent-3-1782589869880",
+    "nombre": "Médicos por Venezuela",
+    "categoria": "Consulta Médica",
+    "descripcion": "Solicita una consulta médica o psicológica online gratis, o regístrate como médico voluntario para ayudar a los afectados.",
+    "url_externa": "https://www.medicosporvenezuela.org/",
+    "esOrganizacion": false,
+    "extraida_en": "2026-06-27T19:51:09.880Z"
+  },
+  {
+    "id": "ent-4-1782589869880",
+    "nombre": "Yesos por Impresión 3D",
+    "categoria": "Impresión 3D",
+    "descripcion": "Archivo listo para imprimir yesos ortopédicos en 3D para víctimas con fracturas. Si tienes una impresora 3D, descarga el archivo y ayuda.",
+    "url_externa": "https://drive.google.com/file/d/1p2C2FDBTM-AGO-xk8ViA_5nBB7a9QhZn/view",
+    "esOrganizacion": false,
+    "extraida_en": "2026-06-27T19:51:09.880Z"
+  },
+  {
+    "id": "ent-5-1782589869880",
+    "nombre": "Personas Desaparecidas",
+    "categoria": "Personas",
+    "descripcion": "Plataforma para reportar o buscar personas desaparecidas tras el terremoto. Publica o consulta casos de familiares y conocidos.",
+    "url_externa": "https://desaparecidosterremotovenezuela.com/",
+    "esOrganizacion": false,
+    "extraida_en": "2026-06-27T19:51:09.880Z"
+  },
+  {
+    "id": "ent-6-1782589869880",
+    "nombre": "Busca en Listas VZla",
+    "categoria": "Personas",
+    "descripcion": "Escribe nombre, apellido o cédula — los buscaremos en las listas de hospitales y refugios que tenemos.",
+    "url_externa": "https://buscaenlistasvzla.info/",
+    "esOrganizacion": false,
+    "extraida_en": "2026-06-27T19:51:09.880Z"
+  },
+  {
+    "id": "ent-7-1782589869880",
+    "nombre": "Mapa La Guaira",
+    "categoria": "Personas",
+    "descripcion": "Mapa de La Guaira que permite ubicar rápidamente a las víctimas del terremoto.",
+    "url_externa": "https://radarvzla.com/",
+    "esOrganizacion": false,
+    "extraida_en": "2026-06-27T19:51:09.880Z"
+  },
+  {
+    "id": "ent-8-1782589869880",
+    "nombre": "SOS en Venezuela",
+    "categoria": "Personas",
+    "descripcion": "Ubicación de centros de ayuda y hospitales en el mapa. Encuentra el punto de ayuda más cercano.",
+    "url_externa": "https://sosenvenezuela.com/sos/",
+    "esOrganizacion": false,
+    "extraida_en": "2026-06-27T19:51:09.880Z"
+  },
+  {
+    "id": "ent-9-1782589869881",
+    "nombre": "Venezuela Te Busca",
+    "categoria": "Personas",
+    "descripcion": "Plataforma nacional de búsqueda de personas desaparecidas. Registra a un familiar o consulta listados actualizados.",
+    "url_externa": "https://venezuelatebusca.com/",
+    "esOrganizacion": false,
+    "extraida_en": "2026-06-27T19:51:09.881Z"
+  },
+  {
+    "id": "ent-10-1782589869881",
+    "nombre": "Hasta Encontrarles – Red Sonadoras",
+    "categoria": "Personas",
+    "descripcion": "Red de apoyo para familias de personas desaparecidas. Comparte la información y amplía la búsqueda.",
+    "url_externa": "https://redsonadoras.com/",
+    "esOrganizacion": false,
+    "extraida_en": "2026-06-27T19:51:09.881Z"
+  },
+  {
+    "id": "ent-11-1782589869881",
+    "nombre": "Enlaza Venezuela",
+    "categoria": "Personas",
+    "descripcion": "Conecta a familiares en el exterior con personas en Venezuela. Publica o busca casos para reunir familias separadas.",
+    "url_externa": "https://enlazavenezuela.com/",
+    "esOrganizacion": false,
+    "extraida_en": "2026-06-27T19:51:09.881Z"
+  },
+  {
+    "id": "ent-12-1782589869881",
+    "nombre": "Localizados Venezuela",
+    "categoria": "Personas",
+    "descripcion": "Registro de personas ya localizadas tras el sismo. Consulta si tu familiar ya fue encontrado.",
+    "url_externa": "https://localizadosvenezuela.com/",
+    "esOrganizacion": false,
+    "extraida_en": "2026-06-27T19:51:09.881Z"
+  },
+  {
+    "id": "ent-13-1782589869881",
+    "nombre": "Huellas a Salvo – Plataforma de Emergencia",
+    "categoria": "Mascotas",
+    "descripcion": "Plataforma de emergencia para el cuidado de animales. Reporta mascotas, encuentra ayuda veterinaria, hogares temporales y centros de acopio. Actualizado cada 30 segundos.",
+    "url_externa": "https://huellasasalvo.org/",
+    "esOrganizacion": false,
+    "extraida_en": "2026-06-27T19:51:09.881Z"
+  },
+  {
+    "id": "ent-14-1782589869881",
+    "nombre": "HuellasCan – Mascotas Perdidas",
+    "categoria": "Mascotas",
+    "descripcion": "Plataforma para reportar mascotas perdidas o encontradas durante el sismo. Ayuda a reunir familias con sus animales.",
+    "url_externa": "https://www.huellascan.com/",
+    "esOrganizacion": false,
+    "extraida_en": "2026-06-27T19:51:09.881Z"
+  },
+  {
+    "id": "ent-15-1782589869881",
+    "nombre": "Patitas a Salvo Venezuela",
+    "categoria": "Mascotas",
+    "descripcion": "Reporta una mascota perdida, avisa si encontraste una, o ayuda con refugios e insumos.",
+    "url_externa": "https://patitasasalvovenezuela.org/",
+    "esOrganizacion": false,
+    "extraida_en": "2026-06-27T19:51:09.881Z"
+  },
+  {
+    "id": "ent-16-1782589869881",
+    "nombre": "Mascotas por Venezuela",
+    "categoria": "Mascotas",
+    "descripcion": "Directorio de mascotas perdidas y encontradas durante el terremoto. Reporta o busca animales desaparecidos.",
+    "url_externa": "https://mascotasporvenezuela.com/",
+    "esOrganizacion": false,
+    "extraida_en": "2026-06-27T19:51:09.881Z"
+  },
+  {
+    "id": "ent-17-1782589869881",
+    "nombre": "Mi Gente VE",
+    "categoria": "Mascotas",
+    "descripcion": "Plataforma de ayuda para mascotas afectadas por el sismo. Conecta a rescatistas con dueños que buscan a sus animales.",
+    "url_externa": "https://migenteve.com/",
+    "esOrganizacion": false,
+    "extraida_en": "2026-06-27T19:51:09.881Z"
+  },
+  {
+    "id": "ent-18-1782589869881",
+    "nombre": "Refugio para Mascotas – Caracas",
+    "categoria": "Mascotas · Instagram",
+    "descripcion": "Refugio veterinario en Caracas que ofrece atención a mascotas afectadas por el sismo. @veterinariaavila",
+    "instagram": "https://www.instagram.com/veterinariaavila/",
+    "esOrganizacion": false,
+    "extraida_en": "2026-06-27T19:51:09.881Z"
+  },
+  {
+    "id": "ent-19-1782589869881",
+    "nombre": "Servicio Veterinario – Caracas",
+    "categoria": "Mascotas · Instagram",
+    "descripcion": "Veterinario voluntario en Caracas atendiendo mascotas afectadas. @isaacdvieirasilguero_",
+    "instagram": "https://www.instagram.com/isaacdvieirasilguero_/",
+    "esOrganizacion": false,
+    "extraida_en": "2026-06-27T19:51:09.881Z"
+  },
+  {
+    "id": "ent-20-1782589869881",
+    "nombre": "Red de Apoyo Canino – Caracas",
+    "categoria": "Mascotas · Instagram",
+    "descripcion": "Red veterinaria de apoyo para perros afectados por el sismo en Caracas. @reddeapoyocanino",
+    "instagram": "https://www.instagram.com/reddeapoyocanino/",
+    "esOrganizacion": false,
+    "extraida_en": "2026-06-27T19:51:09.881Z"
+  },
+  {
+    "id": "ent-21-1782589869881",
+    "nombre": "Atención Veterinaria Gratuita – Happy Vets",
+    "categoria": "Mascotas · Instagram",
+    "descripcion": "Atención veterinaria gratuita para mascotas afectadas por el sismo. @happyvets",
+    "instagram": "https://www.instagram.com/happyvets/",
+    "esOrganizacion": false,
+    "extraida_en": "2026-06-27T19:51:09.881Z"
+  },
+  {
+    "id": "ent-22-1782589869881",
+    "nombre": "Sismo Ayuda Ve",
+    "categoria": "Ingenieros Voluntarios",
+    "descripcion": "Conecta con ingenieros voluntarios para evaluar los daños estructurales de tu vivienda.",
+    "url_externa": "https://www.sismoayudave.com/",
+    "esOrganizacion": false,
+    "extraida_en": "2026-06-27T19:51:09.881Z"
+  },
+  {
+    "id": "ent-23-1782589869881",
+    "nombre": "Mapa de Daños – Terremoto Venezuela",
+    "categoria": "Mapa de Daños",
+    "descripcion": "Mapa interactivo con el reporte de daños estructurales en edificios y viviendas afectadas por el sismo. Consulta o reporta daños en tu zona.",
+    "url_externa": "https://terremotovenezuela.com/",
+    "esOrganizacion": false,
+    "extraida_en": "2026-06-27T19:51:09.881Z"
+  },
+  {
+    "id": "ent-24-1782589869881",
+    "nombre": "Healing Venezuela",
+    "categoria": "Donaciones",
+    "descripcion": "Donaciones para la ONG Healing Venezuela, en terreno entregando material a los rescatistas.",
+    "url_externa": "https://justgiving.com/campaign/venezuelaearthquake2026",
+    "esOrganizacion": false,
+    "extraida_en": "2026-06-27T19:51:09.881Z"
+  },
+  {
+    "id": "ent-25-1782589869881",
+    "nombre": "Pan de Vida & Bomberos UCV – Equipos de Rescate",
+    "categoria": "Donaciones",
+    "descripcion": "Campaña de emergencia para comprar equipos de rescate —cascos, camillas, férulas, cuerdas— disponibles en Caracas para entrega inmediata a los equipos de respuesta.",
+    "url_externa": "https://donorbox.org/emergency-relief-for-venezuela-s-earthquake-survivors",
+    "esOrganizacion": false,
+    "extraida_en": "2026-06-27T19:51:09.881Z"
+  },
+  {
+    "id": "ent-26-1782589869881",
+    "nombre": "Apoyo Venezuela – Centros de Acopio",
+    "categoria": "Centros de Acopio",
+    "descripcion": "Catálogo centralizado de centros de acopio y voluntariado, dentro y fuera de Venezuela, validado por personas reales. Sin intermediarios, sin dinero involucrado.",
+    "url_externa": "https://www.apoyovenezuela.org/",
+    "esOrganizacion": true,
+    "extraida_en": "2026-06-27T19:51:09.881Z"
+  },
+  {
+    "id": "ent-27-1782589869881",
+    "nombre": "Centros de Acopio",
+    "categoria": "Centros de Acopio",
+    "descripcion": "Listado completo de centros de acopio en Venezuela y en el mundo donde puedes entregar o recibir donaciones de alimentos, ropa y medicinas.",
+    "url_externa": "https://docs.google.com/spreadsheets/d/1OTNQGMsK3nU2wqy00rtPPcwsSzAlorWeP-uIotWpkxM/edit?gid=0#gid=0",
+    "esOrganizacion": true,
+    "extraida_en": "2026-06-27T19:51:09.881Z"
+  },
+  {
+    "id": "ent-28-1782589869881",
+    "nombre": "Ayuda en Camino",
+    "categoria": "Centros de Acopio",
+    "descripcion": "Centros de acopio, refugios y ONGs publican sus necesidades en tiempo real. Encuentra dónde llevar tus donaciones y haz que lleguen a quienes más las necesitan.",
+    "url_externa": "https://ayudaencamino.com/",
+    "esOrganizacion": true,
+    "extraida_en": "2026-06-27T19:51:09.881Z"
+  },
+  {
+    "id": "ent-29-1782589869881",
+    "nombre": "Voluntarios Profesionales",
+    "categoria": "Voluntarios",
+    "descripcion": "Conecta voluntarios con ONGs. Si eres médico, bombero, ingeniero, psicólogo, traductor u otro profesional, regístrate para ayudar.",
+    "url_externa": "https://voluntariosprofesionales.vercel.app/",
+    "esOrganizacion": false,
+    "extraida_en": "2026-06-27T19:51:09.881Z"
+  },
+  {
+    "id": "ent-30-1782589869881",
+    "nombre": "Caracas Ayuda",
+    "categoria": "Donaciones",
+    "descripcion": "Puntos de distribución de alimentos y agua en Caracas. Consulta horarios y ubicaciones de los centros más cercanos.",
+    "url_externa": "https://caracasayuda.com/",
+    "esOrganizacion": false,
+    "extraida_en": "2026-06-27T19:51:09.881Z"
+  },
+  {
+    "id": "ent-31-1782589869881",
+    "nombre": "Mapa Acopios y Refugios",
+    "categoria": "Acopio",
+    "descripcion": "Mapa actualizado de centros de acopio y refugios activos en todo el país. Encuentra el más cercano a tu zona.",
+    "url_externa": "https://acopios-refugios.vercel.app/",
+    "esOrganizacion": true,
+    "extraida_en": "2026-06-27T19:51:09.881Z"
+  },
+  {
+    "id": "ent-32-1782589869881",
+    "nombre": "VZla Ayuda",
+    "categoria": "Donaciones",
+    "descripcion": "Directorio de organizaciones y puntos de apoyo para afectados del terremoto en Venezuela.",
+    "url_externa": "https://vzlaayuda.com/",
+    "esOrganizacion": false,
+    "extraida_en": "2026-06-27T19:51:09.881Z"
+  },
+  {
+    "id": "ent-33-1782589869881",
+    "nombre": "Hogar Bambi",
+    "categoria": "Refugio",
+    "descripcion": "Refugio y albergue para niños y familias desplazadas por el sismo. Contacta para solicitar o brindar alojamiento.",
+    "url_externa": "https://hogarbambi.org/",
+    "esOrganizacion": true,
+    "extraida_en": "2026-06-27T19:51:09.881Z"
+  },
+  {
+    "id": "ent-34-1782589869881",
+    "nombre": "Espacio Raíz Consciente",
+    "categoria": "Servicios",
+    "descripcion": "Servicios de apoyo y transporte para afectados. Solicita o coordina ayuda logística en tu zona.",
+    "url_externa": "https://ayuda.espacioraizconsciente.com/",
+    "esOrganizacion": false,
+    "extraida_en": "2026-06-27T19:51:09.881Z"
+  },
+  {
+    "id": "ent-35-1782589869881",
+    "nombre": "Interp Aid",
+    "categoria": "Servicios",
+    "descripcion": "Asistencia con interpretación y comunicación para afectados con barreras idiomáticas o necesidades especiales.",
+    "url_externa": "https://interp-aid.lovable.app/",
+    "esOrganizacion": false,
+    "extraida_en": "2026-06-27T19:51:09.881Z"
+  }
+]

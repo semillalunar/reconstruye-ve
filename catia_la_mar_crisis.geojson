@@ -1,0 +1,125 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -67.0337550845931,
+          10.601834384601156
+        ]
+      },
+      "properties": {
+        "Nombre_Edificio": "Torre F. 21",
+        "Rescatados": 2,
+        "Fallecidos": 1
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -67.02884252326174,
+          10.60221961594415
+        ]
+      },
+      "properties": {
+        "Nombre_Edificio": "Torre E 22",
+        "Rescatados": 2,
+        "Fallecidos": 1
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -67.02970533721123,
+          10.599279424389486
+        ]
+      },
+      "properties": {
+        "Nombre_Edificio": "Playa el agua SUMA",
+        "Rescatados": 1,
+        "Fallecidos": 1
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -67.03426035266763,
+          10.601354648069181
+        ]
+      },
+      "properties": {
+        "Nombre_Edificio": "Torre T 22 Calle 03",
+        "Rescatados": 1,
+        "Fallecidos": 0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -67.02693165033276,
+          10.601129941120524
+        ]
+      },
+      "properties": {
+        "Nombre_Edificio": "Torre I-2",
+        "Rescatados": 3,
+        "Fallecidos": 0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -67.02955188923202,
+          10.599629649855277
+        ]
+      },
+      "properties": {
+        "Nombre_Edificio": "Torre I-6",
+        "Rescatados": 3,
+        "Fallecidos": 0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -67.02733751542425,
+          10.59847917818651
+        ]
+      },
+      "properties": {
+        "Nombre_Edificio": "Torre I-1",
+        "Rescatados": 0,
+        "Fallecidos": 6
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -67.02711110028918,
+          10.606014601651635
+        ]
+      },
+      "properties": {
+        "Nombre_Edificio": "Torre I-7",
+        "Rescatados": 5,
+        "Fallecidos": 0
+      }
+    }
+  ]
+}

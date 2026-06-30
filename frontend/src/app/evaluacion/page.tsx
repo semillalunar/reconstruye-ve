@@ -1,351 +1,701 @@
 "use client";
-import { useState, useEffect } from 'react';
-import { submitATC20Action, ATC20CompletaData } from '@/actions/submitATC20';
+import React, { useState, useRef, useEffect } from 'react';
+import { Camera } from 'lucide-react';
 
-export default function PlanillaEvaluacionRapida() {
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
-  
-  const [data, setData] = useState<Partial<ATC20CompletaData>>({
-    inspector_nombre: '', inspector_cedula: '', direccion: '', nombre_edificacion: '',
-    uso_predominante: 'Vivienda', numero_pisos: 1, material_predominante: 'Concreto',
-    
-    ext_colapso: 'no', ext_aledanos: 'no', ext_geologico: 'no', ext_asentamiento: 'no', ext_inclinacion: 'no',
-    riesgo_externo: 'A',
-    
-    critico_acceso: 'Todos', critico_piso: 'Planta Baja', sev_columnas: 0, sev_muros_conc: 0, sev_muros_mamp: 0, sev_vigas: 0,
-    piso_critico_riesgo: 'A',
-    
-    mod_tipo_elemento: 'Columnas', mod_examinados: 0, mod_danados: 0, dano_moderado_riesgo: 'A',
-    
-    noest_losas: 'bajo', noest_paredes: 'bajo', noest_tanques: 'bajo', noest_gas: 'bajo', noest_ascensores: 'bajo',
-    no_estructural_riesgo: 'A',
-    
-    acciones_recomendadas: [], comentarios: '', evidencia_fotografica: []
-  });
+const Td = ({ children, className = "", colSpan, rowSpan, onClick, onDoubleClick }: any) => (
+  <td onClick={onClick} onDoubleClick={onDoubleClick} colSpan={colSpan} rowSpan={rowSpan} className={`border border-black px-1 py-0.5 text-[10px] sm:text-[11px] align-top leading-tight ${className}`}>
+    {children}
+  </td>
+);
 
-  const [previewImages, setPreviewImages] = useState<string[]>([]);
+const Th = ({ children, className = "", colSpan, rowSpan }: any) => (
+  <th colSpan={colSpan} rowSpan={rowSpan} className={`border border-black px-1 py-0.5 text-[11px] sm:text-xs font-bold align-middle text-center bg-gray-200 uppercase tracking-tight ${className}`}>
+    {children}
+  </th>
+);
 
-  const updateData = (fields: Partial<ATC20CompletaData>) => setData(prev => ({ ...prev, ...fields }));
-
-  // Auto-calcular riesgos cada vez que cambian los detalles
-  useEffect(() => {
-    let r_ext = 'A';
-    if (['posible_total'].includes(data.ext_colapso!) || ['elevado'].includes(data.ext_geologico!) || ['mayor_20'].includes(data.ext_asentamiento!) || ['mayor_2'].includes(data.ext_inclinacion!)) {
-      r_ext = 'C';
-    } else if (['moderado'].includes(data.ext_aledanos!) || ['moderado'].includes(data.ext_geologico!) || ['hasta_20'].includes(data.ext_asentamiento!) || ['hasta_2'].includes(data.ext_inclinacion!)) {
-      r_ext = 'B';
-    }
-
-    let r_critico = 'A';
-    const totalSeveros = (data.sev_columnas||0) + (data.sev_muros_conc||0) + (data.sev_muros_mamp||0) + (data.sev_vigas||0);
-    if (totalSeveros >= 1) r_critico = 'C';
-
-    let r_mod = 'A';
-    if (data.mod_examinados! > 0) {
-      const pct = ((data.mod_danados||0) / (data.mod_examinados||1)) * 100;
-      if (pct > 30) r_mod = 'C';
-      else if (pct >= 10) r_mod = 'B';
-    }
-
-    let r_noest = 'A';
-    const vals = [data.noest_losas, data.noest_paredes, data.noest_tanques, data.noest_gas, data.noest_ascensores];
-    if (vals.includes('alto')) r_noest = 'C';
-    else if (vals.filter(v => v === 'medio').length >= 2) r_noest = 'B'; // Regla simplificada b>=2
-
-    updateData({
-      riesgo_externo: r_ext, piso_critico_riesgo: r_critico, dano_moderado_riesgo: r_mod, no_estructural_riesgo: r_noest
-    });
-  }, [
-    data.ext_colapso, data.ext_aledanos, data.ext_geologico, data.ext_asentamiento, data.ext_inclinacion,
-    data.sev_columnas, data.sev_muros_conc, data.sev_muros_mamp, data.sev_vigas,
-    data.mod_examinados, data.mod_danados,
-    data.noest_losas, data.noest_paredes, data.noest_tanques, data.noest_gas, data.noest_ascensores
-  ]);
-
-  const calculateFinalTag = (): 'VERDE' | 'AMARILLA' | 'ROJA' => {
-    const risks = [data.riesgo_externo, data.piso_critico_riesgo, data.dano_moderado_riesgo, data.no_estructural_riesgo];
-    if (risks.includes('C')) return 'ROJA';
-    if (risks.includes('B')) return 'AMARILLA';
-    return 'VERDE';
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files) return;
-    const files = Array.from(e.target.files).slice(0, 5);
-    
-    Promise.all(files.map(file => {
-      return new Promise<string>((resolve) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result as string);
-        reader.readAsDataURL(file);
-      });
-    })).then(base64Images => {
-      setPreviewImages(base64Images);
-      updateData({ evidencia_fotografica: base64Images });
-    });
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    
-    const submitToServer = async (lat: number, lng: number) => {
-      const finalData = { ...data, etiqueta_final: calculateFinalTag(), lat, lng } as ATC20CompletaData;
-      const result = await submitATC20Action(finalData);
-      if (result.success) setSubmitted(true);
-      else alert('Error al guardar en el servidor local.');
-      setIsSubmitting(false);
-    };
-
-    if ("geolocation" in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        pos => submitToServer(pos.coords.latitude, pos.coords.longitude),
-        () => submitToServer(10.4806, -66.9036),
-        { timeout: 3500 }
-      );
-    } else submitToServer(10.4806, -66.9036);
-  };
-
-  if (submitted) {
+const Input = ({ type = "text", placeholder = "", value, onChange, className = "", onDoubleClick }: any) => {
+  if (type === 'checkbox') {
     return (
-      <div className="min-h-screen bg-[#1e1e1e] flex flex-col items-center justify-center p-6 text-center">
-        <div className="text-6xl mb-6">📝</div>
-        <h2 className="text-2xl font-bold text-white mb-2">Planilla Guardada</h2>
-        <p className="text-gray-400 text-sm mb-8">La evaluación ha sido enviada al servidor central.</p>
-        <button onClick={() => window.location.reload()} className="bg-blue-600 text-white font-bold px-6 py-3 rounded">Siguiente Inspección</button>
-      </div>
+      <input
+        type="checkbox"
+        className={`accent-black w-3 h-3 m-0 p-0 cursor-pointer block ${className}`}
+        checked={value}
+        onChange={onChange}
+      />
     );
   }
+  return (
+    <input
+      type={type}
+      value={value}
+      onChange={onChange}
+      onDoubleClick={onDoubleClick}
+      placeholder={placeholder}
+      className={`w-full bg-transparent outline-none focus:bg-yellow-100 placeholder-gray-300 ${className}`}
+    />
+  );
+};
 
-  const finalTag = calculateFinalTag();
+// Componente especial para la sección 8, permite escribir números o hacer doble clic para un ✓ automático
+const DualInput = ({ value, onChange }: any) => {
+  return (
+    <Input 
+      type="text" 
+      className="text-center w-full h-full p-1 cursor-text" 
+      value={value || ''} 
+      onChange={(e:any) => onChange(e.target.value)} 
+      onDoubleClick={() => onChange('✓')}
+      placeholder="doble clic = ✓"
+    />
+  );
+};
+
+const CheckboxRow = ({ label, className = "" }: any) => (
+  <table className={`w-full border-collapse ${className}`}>
+    <tbody>
+      <tr>
+        <td className="px-1 text-left text-[10px] sm:text-[11px] align-middle">{label}</td>
+        <td className="w-4 px-1 align-middle text-center border-l border-transparent"><Input type="checkbox" /></td>
+      </tr>
+    </tbody>
+  </table>
+);
+
+// COMPONENTE DE DIBUJO PARA EL CROQUIS
+const DrawingCanvas = () => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [isDrawing, setIsDrawing] = useState(false);
+
+  useEffect(() => {
+    // Configurar el contexto del canvas para que el trazo sea visible y suave
+    const canvas = canvasRef.current;
+    if (canvas) {
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.strokeStyle = 'black';
+        ctx.lineWidth = 2;
+        ctx.lineJoin = 'round';
+        ctx.lineCap = 'round';
+      }
+    }
+  }, []);
+
+  const getCoordinates = (e: any) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return null;
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    
+    // Soportar mouse y touch
+    const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+    const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+    
+    if (!clientX || !clientY) return null;
+
+    return {
+      x: (clientX - rect.left) * scaleX,
+      y: (clientY - rect.top) * scaleY
+    };
+  };
+
+  const startDrawing = (e: any) => {
+    // Evitar scroll en móviles cuando se dibuja
+    if (e.touches) e.preventDefault(); 
+    
+    const coords = getCoordinates(e);
+    if (!coords) return;
+    
+    const ctx = canvasRef.current?.getContext('2d');
+    if (ctx) {
+      ctx.beginPath();
+      ctx.moveTo(coords.x, coords.y);
+      setIsDrawing(true);
+    }
+  };
+
+  const draw = (e: any) => {
+    if (!isDrawing) return;
+    if (e.touches) e.preventDefault();
+
+    const coords = getCoordinates(e);
+    if (!coords) return;
+
+    const ctx = canvasRef.current?.getContext('2d');
+    if (ctx) {
+      ctx.lineTo(coords.x, coords.y);
+      ctx.stroke();
+    }
+  };
+
+  const stopDrawing = () => {
+    setIsDrawing(false);
+  };
+
+  const clearCanvas = () => {
+    const canvas = canvasRef.current;
+    if (canvas) {
+      const ctx = canvas.getContext('2d');
+      ctx?.clearRect(0, 0, canvas.width, canvas.height);
+    }
+  };
 
   return (
-    <main className="min-h-screen bg-gray-100 text-black font-sans py-8 flex justify-center">
-      <div className="w-full max-w-4xl bg-white shadow-2xl border border-gray-300">
+    <div className="relative w-full h-40">
+      {/* El fondo de cuadrícula con CSS */}
+      <div className="absolute inset-0 z-0 pointer-events-none" style={{ backgroundImage: 'linear-gradient(#e5e7eb 1px, transparent 1px), linear-gradient(90deg, #e5e7eb 1px, transparent 1px)', backgroundSize: '15px 15px' }}></div>
+      
+      {/* El lienzo interactivo */}
+      <canvas 
+        ref={canvasRef}
+        width={850} 
+        height={160}
+        className="absolute inset-0 z-10 w-full h-full cursor-crosshair touch-none"
+        onMouseDown={startDrawing}
+        onMouseMove={draw}
+        onMouseUp={stopDrawing}
+        onMouseOut={stopDrawing}
+        onTouchStart={startDrawing}
+        onTouchMove={draw}
+        onTouchEnd={stopDrawing}
+      />
+      
+      {/* Botón flotante para limpiar */}
+      <button type="button" onClick={clearCanvas} className="absolute top-2 right-2 z-20 bg-white border border-gray-400 text-black text-[9px] px-2 py-1 rounded shadow-sm print:hidden hover:bg-gray-100 font-bold">
+        Borrar Croquis
+      </button>
+    </div>
+  );
+};
+
+
+export default function PlanillaOficialLimpia() {
+  const [data, setData] = useState<any>({});
+  const update = (key: string, val: any) => setData((prev: any) => ({ ...prev, [key]: val }));
+
+  return (
+    <main className="min-h-screen bg-neutral-300 py-8 flex flex-col items-center font-sans text-black select-none">
+      
+      <div className="fixed bottom-4 right-4 z-50">
+        <button className="bg-blue-700 text-white font-bold px-6 py-3 rounded-full shadow-2xl hover:bg-blue-800 print:hidden text-sm">
+          FIRMADO: ENVIAR
+        </button>
+      </div>
+
+      {/* =========================================
+          PÁGINA 1
+          ========================================= */}
+      <div className="w-full max-w-[850px] bg-white shadow-2xl p-4 sm:p-8 flex flex-col mb-8 print:shadow-none print:mb-0">
         
         {/* ENCABEZADO */}
-        <div className="bg-black text-white p-4 flex justify-between items-center">
-          <h1 className="font-bold text-lg">EVALUACIÓN RÁPIDA DE DAÑOS EN EDIFICACIONES</h1>
-          <span className="text-xs bg-yellow-500 text-black px-2 py-1 font-bold">PLANILLA OFICIAL DIGITAL</span>
+        <div className="flex justify-between items-center mb-2">
+          <div className="flex items-center gap-3">
+            <div className="flex flex-col border-r border-black pr-3">
+              <div className="font-black text-[10px] bg-black text-white px-1.5 py-0.5 mb-0.5 inline-block w-max tracking-wide">
+                INICIATIVA CIUDADANA
+              </div>
+              <div className="font-bold text-[8px] uppercase leading-tight text-gray-800">
+                Digitalizado y Codificado<br/>Versión de Código Abierto
+              </div>
+            </div>
+            <div className="leading-none">
+              <div className="font-bold text-xs">Formato Basado en</div>
+              <div className="font-bold text-xs">Planilla ATC-20</div>
+            </div>
+          </div>
+          <div className="text-[10px] text-center border-l border-r border-black px-2 mx-2 leading-tight font-serif italic flex-1">
+            Ministerio del Poder Popular<br/>para Relaciones Interiores, Justicia y Paz
+          </div>
+          <div className="text-[10px] leading-tight font-serif italic text-right">
+            Fundación Venezolana<br/>de Investigaciones Sismológicas (Funvisis)
+          </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-8 space-y-8">
-          
-          {/* 1. INFORMACIÓN GENERAL */}
-          <section>
-            <h2 className="bg-gray-800 text-white font-bold px-3 py-1 mb-4">1. INFORMACIÓN GENERAL</h2>
-            <div className="grid grid-cols-2 gap-4 mb-4">
-              <div>
-                <label className="text-xs font-bold uppercase block">Nombre del Inspector</label>
-                <input required type="text" className="w-full border-b border-gray-400 p-1 bg-gray-50 focus:bg-yellow-50 outline-none" value={data.inspector_nombre} onChange={e => updateData({ inspector_nombre: e.target.value })} />
-              </div>
-              <div>
-                <label className="text-xs font-bold uppercase block">Cédula de Identidad / CIV</label>
-                <input required type="text" className="w-full border-b border-gray-400 p-1 bg-gray-50 focus:bg-yellow-50 outline-none" value={data.inspector_cedula} onChange={e => updateData({ inspector_cedula: e.target.value })} />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="text-xs font-bold uppercase block">Nombre de la Edificación</label>
-                <input type="text" className="w-full border-b border-gray-400 p-1 bg-gray-50 focus:bg-yellow-50 outline-none" value={data.nombre_edificacion} onChange={e => updateData({ nombre_edificacion: e.target.value })} />
-              </div>
-              <div>
-                <label className="text-xs font-bold uppercase block">Sector/Calle/Ciudad</label>
-                <input type="text" className="w-full border-b border-gray-400 p-1 bg-gray-50 focus:bg-yellow-50 outline-none" value={data.direccion} onChange={e => updateData({ direccion: e.target.value })} />
-              </div>
-            </div>
-            <div className="grid grid-cols-4 gap-4 mt-4">
-              <div className="col-span-2">
-                <label className="text-xs font-bold uppercase block">Uso predominante</label>
-                <select className="w-full border border-gray-400 p-1" value={data.uso_predominante} onChange={e => updateData({ uso_predominante: e.target.value })}>
-                  <option>Vivienda</option><option>Comercio/Oficina</option><option>Gubernamental</option>
-                  <option>Educativo</option><option>Médico/Asistencial</option><option>Seguridad</option><option>Religioso</option>
-                </select>
-              </div>
-              <div>
-                <label className="text-xs font-bold uppercase block">Nº de Pisos</label>
-                <input type="number" min="1" className="w-full border border-gray-400 p-1 text-center" value={data.numero_pisos} onChange={e => updateData({ numero_pisos: parseInt(e.target.value)||1 })} />
-              </div>
-              <div>
-                <label className="text-xs font-bold uppercase block">Estructura</label>
-                <select className="w-full border border-gray-400 p-1" value={data.material_predominante} onChange={e => updateData({ material_predominante: e.target.value })}>
-                  <option>Concreto</option><option>Acero</option><option>Mampostería formal</option><option>Mampostería informal</option>
-                </select>
-              </div>
-            </div>
-          </section>
+        <div className="border border-black text-center font-bold text-sm mb-1 bg-gray-100 uppercase py-0.5 shadow-sm">
+          Instrumento para Inspección de Edificaciones Afectadas por Sismos
+        </div>
 
-          {/* 2. INSPECCIÓN EXTERNA */}
-          <section>
-            <div className="flex justify-between items-center bg-gray-800 px-3 py-1 mb-2">
-              <h2 className="text-white font-bold">2. INSPECCIÓN EXTERNA (calificar sin ingresar a la edificación)</h2>
-              <span className="text-yellow-400 font-mono text-sm font-bold">Riesgo Calculado: {data.riesgo_externo}</span>
-            </div>
-            <table className="w-full text-sm border-collapse border border-gray-400">
-              <thead className="bg-gray-200">
-                <tr><th className="border border-gray-400 p-1 text-left">Aspectos revisados</th><th className="border border-gray-400 p-1 w-24">a. Bajo</th><th className="border border-gray-400 p-1 w-32">b. Medio</th><th className="border border-gray-400 p-1 w-40">c. Alto</th></tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td className="border border-gray-400 p-2 font-bold">Colapso de la estructura</td>
-                  <td className="border border-gray-400 p-2 text-center"><label><input type="radio" name="col" checked={data.ext_colapso==='no'} onChange={()=>updateData({ext_colapso:'no'})} /> No</label></td>
-                  <td className="border border-gray-400 p-2 text-center bg-gray-100"></td>
-                  <td className="border border-gray-400 p-2 text-center"><label><input type="radio" name="col" checked={data.ext_colapso==='posible_total'} onChange={()=>updateData({ext_colapso:'posible_total'})} /> Parcial/Total</label></td>
-                </tr>
-                <tr>
-                  <td className="border border-gray-400 p-2 font-bold">Peligro por edificios aledaños</td>
-                  <td className="border border-gray-400 p-2 text-center"><label><input type="radio" name="ale" checked={data.ext_aledanos==='no'} onChange={()=>updateData({ext_aledanos:'no'})} /> No</label></td>
-                  <td className="border border-gray-400 p-2 text-center"><label><input type="radio" name="ale" checked={data.ext_aledanos==='moderado'} onChange={()=>updateData({ext_aledanos:'moderado'})} /> Moderado</label></td>
-                  <td className="border border-gray-400 p-2 text-center"><label><input type="radio" name="ale" checked={data.ext_aledanos==='elevado'} onChange={()=>updateData({ext_aledanos:'elevado'})} /> Elevado</label></td>
-                </tr>
-                <tr>
-                  <td className="border border-gray-400 p-2 font-bold">Peligro geológico o geotécnico</td>
-                  <td className="border border-gray-400 p-2 text-center"><label><input type="radio" name="geo" checked={data.ext_geologico==='no'} onChange={()=>updateData({ext_geologico:'no'})} /> No</label></td>
-                  <td className="border border-gray-400 p-2 text-center"><label><input type="radio" name="geo" checked={data.ext_geologico==='moderado'} onChange={()=>updateData({ext_geologico:'moderado'})} /> Moderado</label></td>
-                  <td className="border border-gray-400 p-2 text-center"><label><input type="radio" name="geo" checked={data.ext_geologico==='elevado'} onChange={()=>updateData({ext_geologico:'elevado'})} /> Elevado</label></td>
-                </tr>
-                <tr>
-                  <td className="border border-gray-400 p-2 font-bold">Asentamiento del edificio</td>
-                  <td className="border border-gray-400 p-2 text-center"><label><input type="radio" name="ase" checked={data.ext_asentamiento==='no'} onChange={()=>updateData({ext_asentamiento:'no'})} /> No</label></td>
-                  <td className="border border-gray-400 p-2 text-center"><label><input type="radio" name="ase" checked={data.ext_asentamiento==='hasta_20'} onChange={()=>updateData({ext_asentamiento:'hasta_20'})} /> Hasta 20 cm</label></td>
-                  <td className="border border-gray-400 p-2 text-center"><label><input type="radio" name="ase" checked={data.ext_asentamiento==='mayor_20'} onChange={()=>updateData({ext_asentamiento:'mayor_20'})} /> &gt; 20 cm</label></td>
-                </tr>
-                <tr>
-                  <td className="border border-gray-400 p-2 font-bold">Inclinación del edificio</td>
-                  <td className="border border-gray-400 p-2 text-center"><label><input type="radio" name="inc" checked={data.ext_inclinacion==='no'} onChange={()=>updateData({ext_inclinacion:'no'})} /> No</label></td>
-                  <td className="border border-gray-400 p-2 text-center"><label><input type="radio" name="inc" checked={data.ext_inclinacion==='hasta_2'} onChange={()=>updateData({ext_inclinacion:'hasta_2'})} /> Hasta 2cm/60cm</label></td>
-                  <td className="border border-gray-400 p-2 text-center"><label><input type="radio" name="inc" checked={data.ext_inclinacion==='mayor_2'} onChange={()=>updateData({ext_inclinacion:'mayor_2'})} /> &gt; 2cm/60cm</label></td>
-                </tr>
-              </tbody>
-            </table>
-          </section>
-
-          {/* 3. PISO CRÍTICO */}
-          <section>
-            <div className="flex justify-between items-center bg-gray-800 px-3 py-1 mb-2">
-              <h2 className="text-white font-bold uppercase">3. PISO CRÍTICO Y ELEMENTOS PRINCIPALES CON DAÑO SEVERO/COMPLETO</h2>
-              <span className="text-yellow-400 font-mono text-sm font-bold">Riesgo Calculado: {data.piso_critico_riesgo}</span>
-            </div>
-            <div className="flex gap-4 text-sm mb-2 border border-gray-400 p-2">
-              <div className="flex-1">
-                <label className="font-bold mr-2">Pisos Inspeccionados:</label>
-                <select className="border border-gray-400 p-1" value={data.critico_acceso} onChange={e=>updateData({critico_acceso:e.target.value})}>
-                  <option>Todos</option><option>Casi todos</option><option>Pocos</option><option>Ninguno</option>
-                </select>
-              </div>
-              <div className="flex-1">
-                <label className="font-bold mr-2">Piso Crítico detectado:</label>
-                <input type="text" className="border-b border-gray-400 outline-none" placeholder="Ej: Planta Baja" value={data.critico_piso} onChange={e=>updateData({critico_piso:e.target.value})} />
-              </div>
-            </div>
-            <table className="w-full text-sm border-collapse border border-gray-400">
-              <thead className="bg-gray-200">
-                <tr><th className="border border-gray-400 p-1 text-left" colSpan={4}>Nº de elementos con daño Severo/Completo (N) en piso crítico</th></tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td className="border border-gray-400 p-2 text-center"><label className="block text-xs uppercase mb-1">Columnas</label><input type="number" min="0" className="w-16 border border-gray-400 text-center" value={data.sev_columnas} onChange={e=>updateData({sev_columnas:parseInt(e.target.value)||0})} /></td>
-                  <td className="border border-gray-400 p-2 text-center"><label className="block text-xs uppercase mb-1">Muro Conc.</label><input type="number" min="0" className="w-16 border border-gray-400 text-center" value={data.sev_muros_conc} onChange={e=>updateData({sev_muros_conc:parseInt(e.target.value)||0})} /></td>
-                  <td className="border border-gray-400 p-2 text-center"><label className="block text-xs uppercase mb-1">Muro Mamp.</label><input type="number" min="0" className="w-16 border border-gray-400 text-center" value={data.sev_muros_mamp} onChange={e=>updateData({sev_muros_mamp:parseInt(e.target.value)||0})} /></td>
-                  <td className="border border-gray-400 p-2 text-center"><label className="block text-xs uppercase mb-1">Vigas/Arriost.</label><input type="number" min="0" className="w-16 border border-gray-400 text-center" value={data.sev_vigas} onChange={e=>updateData({sev_vigas:parseInt(e.target.value)||0})} /></td>
-                </tr>
-              </tbody>
-            </table>
-          </section>
-
-          {/* 4. DAÑO MODERADO */}
-          <section>
-            <div className="flex justify-between items-center bg-gray-800 px-3 py-1 mb-2">
-              <h2 className="text-white font-bold uppercase">4. INSPECCIÓN DAÑO MODERADO EN EL PISO CRÍTICO</h2>
-              <span className="text-yellow-400 font-mono text-sm font-bold">Riesgo Calculado: {data.dano_moderado_riesgo}</span>
-            </div>
-            <table className="w-full text-sm border-collapse border border-gray-400">
-              <thead className="bg-gray-200">
-                <tr><th className="border border-gray-400 p-1">Tipo de Elemento (más dañado)</th><th className="border border-gray-400 p-1 w-32">Nº Total Examinados</th><th className="border border-gray-400 p-1 w-32">Nº con Daño Moderado</th></tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td className="border border-gray-400 p-2">
-                    <select className="w-full border border-gray-400 p-1" value={data.mod_tipo_elemento} onChange={e=>updateData({mod_tipo_elemento:e.target.value})}>
-                      <option>Columnas</option><option>Muros de Concreto</option><option>Muros Mampostería</option><option>Vigas</option>
-                    </select>
-                  </td>
-                  <td className="border border-gray-400 p-2 text-center"><input type="number" min="0" className="w-16 border border-gray-400 text-center" value={data.mod_examinados} onChange={e=>updateData({mod_examinados:parseInt(e.target.value)||0})} /></td>
-                  <td className="border border-gray-400 p-2 text-center"><input type="number" min="0" className="w-16 border border-gray-400 text-center" value={data.mod_danados} onChange={e=>updateData({mod_danados:parseInt(e.target.value)||0})} /></td>
-                </tr>
-              </tbody>
-            </table>
-          </section>
-
-          {/* 5. NO ESTRUCTURAL */}
-          <section>
-            <div className="flex justify-between items-center bg-gray-800 px-3 py-1 mb-2">
-              <h2 className="text-white font-bold uppercase">5. OTROS ELEMENTOS NO ESTRUCTURALES</h2>
-              <span className="text-yellow-400 font-mono text-sm font-bold">Riesgo Calculado: {data.no_estructural_riesgo}</span>
-            </div>
-            <table className="w-full text-sm border-collapse border border-gray-400">
-              <thead className="bg-gray-200">
-                <tr><th className="border border-gray-400 p-1 text-left">Componente</th><th className="border border-gray-400 p-1 w-24">a. Bajo</th><th className="border border-gray-400 p-1 w-32">b. Medio</th><th className="border border-gray-400 p-1 w-32">c. Alto</th></tr>
-              </thead>
-              <tbody>
-                {['losas', 'paredes', 'tanques', 'gas', 'ascensores'].map((item, idx) => (
-                  <tr key={item}>
-                    <td className="border border-gray-400 p-2 font-bold capitalize">{item}</td>
-                    <td className="border border-gray-400 p-2 text-center"><input type="radio" name={item} checked={(data as any)[`noest_${item}`]==='bajo'} onChange={()=>updateData({[`noest_${item}`]:'bajo'})} /></td>
-                    <td className="border border-gray-400 p-2 text-center"><input type="radio" name={item} checked={(data as any)[`noest_${item}`]==='medio'} onChange={()=>updateData({[`noest_${item}`]:'medio'})} /></td>
-                    <td className="border border-gray-400 p-2 text-center"><input type="radio" name={item} checked={(data as any)[`noest_${item}`]==='alto'} onChange={()=>updateData({[`noest_${item}`]:'alto'})} /></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </section>
-
-          {/* 7. EVIDENCIA FOTOGRÁFICA (NUEVO) */}
-          <section>
-            <h2 className="bg-gray-800 text-white font-bold px-3 py-1 mb-2">7. EVIDENCIA FOTOGRÁFICA (Máx 5)</h2>
-            <div className="border border-gray-400 p-4 bg-gray-50">
-              <input type="file" accept="image/*" multiple onChange={handleFileChange} className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-100 file:text-blue-700 hover:file:bg-blue-200" />
-              
-              {previewImages.length > 0 && (
-                <div className="flex gap-2 mt-4 overflow-x-auto pb-2">
-                  {previewImages.map((src, idx) => (
-                    <img key={idx} src={src} alt="Evidencia ATC-20" className="h-20 w-20 object-cover border border-gray-300" />
-                  ))}
-                </div>
-              )}
-            </div>
-          </section>
-
-          {/* 8. COMENTARIOS (NUEVO) */}
-          <section>
-            <h2 className="bg-gray-800 text-white font-bold px-3 py-1 mb-2">8. ANOTACIONES Y OBSERVACIONES DEL INSPECTOR</h2>
-            <textarea 
-              className="w-full border border-gray-400 p-3 h-24 font-mono text-sm outline-none focus:border-blue-500 bg-yellow-50/30" 
-              placeholder="Escriba observaciones adicionales, croquis mental o justificaciones de la decisión..."
-              value={data.comentarios} onChange={e=>updateData({comentarios: e.target.value})}
-            ></textarea>
-          </section>
-
-          {/* 9. RESULTADO FINAL */}
-          <section className="bg-gray-100 border-4 border-gray-800 p-6 flex items-center justify-between shadow-inner">
-            <div>
-              <h2 className="text-xl font-bold uppercase mb-1">9. RECOMENDACIÓN DE ACCESO</h2>
-              <p className="text-xs text-gray-500 max-w-sm">Calculado según el riesgo más desfavorable de los puntos 2, 3, 4 y 5. Al guardar, se fijará la coordenada GPS.</p>
-            </div>
+        {/* TABLA MASTER PAG 1 */}
+        <table className="w-full border-collapse border-2 border-black table-fixed bg-white">
+          <tbody>
             
-            <div className={`border-4 w-64 p-4 text-center ${finalTag==='VERDE'?'bg-green-500 border-green-800':finalTag==='AMARILLA'?'bg-yellow-400 border-yellow-600':'bg-red-600 border-red-900 text-white'}`}>
-              <h1 className="text-2xl font-black tracking-widest">{finalTag}</h1>
-              <p className="text-xs font-bold">{finalTag==='VERDE'?'ACCESO PERMITIDO':finalTag==='AMARILLA'?'ACCESO RESTRINGIDO':'NO ENTRE NI OCUPE'}</p>
-            </div>
-          </section>
+            {/* 1. DATOS DE LOS INSPECTORES */}
+            <tr><Th colSpan={6}>1. DATOS DE LOS INSPECTORES</Th></tr>
+            <tr className="bg-gray-100 font-bold text-center">
+              <Td className="w-1/6">Función</Td>
+              <Td className="w-2/6">Nombre y Apellido</Td>
+              <Td className="w-1/6">Cédula</Td>
+              <Td className="w-1/6">Profesión</Td>
+              <Td className="w-1/6">Teléfono</Td>
+              <Td className="w-1/6">Correo Electrónico</Td>
+            </tr>
+            {['Inspector', 'Inspector', 'Supervisor'].map((func, i) => (
+              <tr key={i}>
+                <Td className="font-bold bg-gray-50 text-center">{func}</Td>
+                <Td><Input /></Td>
+                <Td><Input /></Td>
+                <Td><Input /></Td>
+                <Td><Input /></Td>
+                <Td><Input /></Td>
+              </tr>
+            ))}
 
-          {/* SUBMIT */}
-          <button type="submit" disabled={isSubmitting || !data.inspector_cedula} className="w-full bg-blue-700 hover:bg-blue-600 text-white font-bold py-6 text-xl tracking-wider disabled:opacity-50 transition-colors shadow-lg">
-            {isSubmitting ? 'Firmando y Guardando (GPS)...' : 'FIRMADO: GUARDAR PLANILLA OFICIAL'}
-          </button>
-        </form>
+            {/* 2. DATOS GENERALES */}
+            <tr><Th colSpan={6}>2. DATOS GENERALES</Th></tr>
+            <tr>
+              <Td colSpan={4}><div className="flex items-center"><span className="w-16 whitespace-nowrap font-bold">Nombre:</span> <Input className="border-b border-black border-dashed mx-1" /></div></Td>
+              <Td colSpan={2}><div className="flex items-center"><span className="w-20 whitespace-nowrap font-bold">Hora Inicio:</span> <Input type="time" className="border-b border-black border-dashed mx-1" /></div></Td>
+            </tr>
+            <tr>
+              <Td colSpan={2}><div className="flex items-center"><span className="w-12 whitespace-nowrap font-bold">Fecha:</span> <Input type="date" className="border-b border-black border-dashed mx-1" /></div></Td>
+              <Td colSpan={2}><div className="flex items-center"><span className="w-20 whitespace-nowrap font-bold">Nº Pisos:</span> <Input type="number" className="border-b border-black border-dashed mx-1" /></div></Td>
+              <Td colSpan={2}><div className="flex items-center"><span className="w-24 whitespace-nowrap font-bold">Nº Semisótanos:</span> <Input type="number" className="border-b border-black border-dashed mx-1" /></div></Td>
+            </tr>
+            <tr>
+              <Td colSpan={2}><div className="flex items-center"><span className="w-14 whitespace-nowrap font-bold">Estado:</span> <Input className="border-b border-black border-dashed mx-1" /></div></Td>
+              <Td colSpan={2}><div className="flex items-center"><span className="w-14 whitespace-nowrap font-bold">Ciudad:</span> <Input className="border-b border-black border-dashed mx-1" /></div></Td>
+              <Td colSpan={2}><div className="flex items-center"><span className="w-16 whitespace-nowrap font-bold">Municipio:</span> <Input className="border-b border-black border-dashed mx-1" /></div></Td>
+            </tr>
+            <tr>
+              <Td colSpan={2}><div className="flex items-center"><span className="w-10 whitespace-nowrap font-bold">Urb:</span> <Input className="border-b border-black border-dashed mx-1" /></div></Td>
+              <Td colSpan={2}><div className="flex items-center"><span className="w-12 whitespace-nowrap font-bold">Sector:</span> <Input className="border-b border-black border-dashed mx-1" /></div></Td>
+              <Td colSpan={2}><div className="flex items-center"><span className="w-20 whitespace-nowrap font-bold">Ave, Calle:</span> <Input className="border-b border-black border-dashed mx-1" /></div></Td>
+            </tr>
+
+            {/* 3. USO DE LA EDIFICACION */}
+            <tr><Th colSpan={6}>3. USO DE LA EDIFICACIÓN</Th></tr>
+            <tr>
+              <Td colSpan={6} className="p-0 border-0">
+                <table className="w-full border-collapse">
+                  <tbody>
+                    <tr>
+                      <td className="w-1/4 border-r border-b border-black p-0"><CheckboxRow label="Gubernamental" /></td>
+                      <td className="w-1/4 border-r border-b border-black p-0"><CheckboxRow label="Militar" /></td>
+                      <td className="w-1/4 border-r border-b border-black p-0"><CheckboxRow label="Médico-Asistencial" /></td>
+                      <td className="w-1/4 border-b border-black p-0"><CheckboxRow label="Industrial" /></td>
+                    </tr>
+                    <tr>
+                      <td className="border-r border-b border-black p-0"><CheckboxRow label="Bomberos" /></td>
+                      <td className="border-r border-b border-black p-0"><CheckboxRow label="Vivienda Popular" /></td>
+                      <td className="border-r border-b border-black p-0"><CheckboxRow label="Educativo" /></td>
+                      <td className="border-b border-black p-0"><CheckboxRow label="Comercial" /></td>
+                    </tr>
+                    <tr>
+                      <td className="border-r border-black p-0"><CheckboxRow label="Protección Civil" /></td>
+                      <td className="border-r border-black p-0"><CheckboxRow label="Vivienda Multifamiliar" /></td>
+                      <td className="border-r border-black p-0"><CheckboxRow label="Deportivo-Recreativo" /></td>
+                      <td className="p-0"><CheckboxRow label="Oficina" /></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </Td>
+            </tr>
+
+            {/* 4. TIPO ESTRUCTURAL */}
+            <tr><Th colSpan={6}>4. TIPO ESTRUCTURAL</Th></tr>
+            <tr>
+              <Td colSpan={6} className="p-0 border-0">
+                <table className="w-full border-collapse">
+                  <thead>
+                    <tr className="bg-gray-100 font-bold text-center border-b border-black">
+                      <td className="w-1/4 border-r border-black py-0.5 text-[10px]">CONCRETO ARMADO</td>
+                      <td className="w-1/4 border-r border-black py-0.5 text-[10px]">ACERO</td>
+                      <td className="w-1/4 border-r border-black py-0.5 text-[10px]">MAMPOSTERÍA</td>
+                      <td className="w-1/4 py-0.5 text-[10px]">OTROS</td>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td className="border-r border-black align-top p-0">
+                        <CheckboxRow label="Pórticos" />
+                        <CheckboxRow label="Muros" />
+                        <CheckboxRow label="Prefabricados" />
+                      </td>
+                      <td className="border-r border-black align-top p-0">
+                        <CheckboxRow label="Pórticos arriostrados" />
+                        <CheckboxRow label="Pórticos no arriostrados" />
+                        <div className="text-center underline font-bold mt-1 text-[10px]">Conexiones</div>
+                        <CheckboxRow label="Apernadas" />
+                        <CheckboxRow label="Soldadas" />
+                      </td>
+                      <td className="border-r border-black align-top p-0">
+                        <CheckboxRow label="Confinada" />
+                        <CheckboxRow label="No confinada" />
+                        <div className="text-center text-[9px] mt-1 px-1 leading-tight border-t border-black pt-1 bg-gray-50 h-full">Sistemas mixtos de pórticos de baja calidad</div>
+                      </td>
+                      <td className="align-top p-0">
+                        <CheckboxRow label="Construcción precaria" />
+                        <CheckboxRow label="Bahareque" />
+                        <div className="mt-2 px-1 text-[10px]">Otros (Especifique): <Input className="border-b border-black mt-1" /></div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </Td>
+            </tr>
+
+            {/* 5. INSPECCION EXTERNA */}
+            <tr><Th colSpan={6}>5. INSPECCIÓN EXTERNA SIN ACCESAR A LA EDIFICACIÓN</Th></tr>
+            <tr>
+              <Td colSpan={6} className="p-0 border-0">
+                <table className="w-full border-collapse">
+                  <thead>
+                    <tr className="bg-gray-100 font-bold text-center border-b border-black">
+                      <td className="w-5/12 border-r border-black py-0.5">Clasificación</td>
+                      <td className="w-[19%] border-r border-black py-0.5">a</td>
+                      <td className="w-[19%] border-r border-black py-0.5">b</td>
+                      <td className="w-[19%] py-0.5">c</td>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[
+                      ['Colapso de la estructura', 'No', 'Parcial', 'Total'],
+                      ['Riesgo de edificios aledaños', 'No', 'Moderado', 'Elevado'],
+                      ['Amenaza geológica', 'No', 'Moderada', 'Elevada'],
+                      ['Asentamiento del edificio', '< 0,2 m', '0,2 m - 1 m', '> 1 m'],
+                      ['Inclinación del edificio', '< 1 cm / 60 cm', '1/60 - 2/60', '> 2 cm / 60 cm']
+                    ].map((row, i) => (
+                      <tr key={i} className="border-b border-black">
+                        <td className="border-r border-black py-1 px-2 text-right font-bold text-[10px]">{row[0]}</td>
+                        <td className="border-r border-black p-0"><CheckboxRow label={row[1]} /></td>
+                        <td className="border-r border-black p-0"><CheckboxRow label={row[2]} /></td>
+                        <td className="p-0"><CheckboxRow label={row[3]} /></td>
+                      </tr>
+                    ))}
+                    
+                    {/* 5.1 Nivel Riesgo Externo */}
+                    <tr className="border-b border-black bg-gray-200">
+                      <td colSpan={4} className="text-center font-bold text-[10px] py-0.5">5.1 NIVEL DE RIESGO EXTERNO</td>
+                    </tr>
+                    <tr>
+                      <td colSpan={4} className="p-0">
+                        <table className="w-full border-collapse">
+                          <tbody>
+                            <tr>
+                              <td className="w-1/3 p-0"><CheckboxRow label="A (todos a)" className="font-bold" /></td>
+                              <td className="w-1/3 p-0"><CheckboxRow label="B (b≥1)" className="font-bold" /></td>
+                              <td className="w-1/3 p-0"><CheckboxRow label="C (c≥1)" className="font-bold" /></td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </Td>
+            </tr>
+
+            {/* 6. REQUIERE INTERNA & 7. CROQUIS */}
+            <tr>
+              <Td colSpan={6} className="p-0">
+                <table className="w-full border-collapse">
+                  <tbody>
+                    <tr className="border-b border-black">
+                      <td className="w-1/2 font-bold bg-gray-100 border-r border-black py-1 px-2 text-center text-[10px]">
+                        6. ¿SE REQUIERE INSPECCIÓN INTERNA?
+                      </td>
+                      <td className="w-1/2 p-0">
+                        <table className="w-full">
+                          <tbody>
+                            <tr>
+                              <td className="w-1/2 p-0 border-r border-gray-300"><CheckboxRow label="Si" className="font-bold pl-4" /></td>
+                              <td className="w-1/2 p-0"><CheckboxRow label="No" className="font-bold pl-4" /></td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+                <div className="bg-gray-200 text-center font-bold p-1 text-[11px] border-b border-black">
+                  7. CROQUIS DE PLANTA (Piso Crítico)
+                </div>
+                {/* Lógica de Canvas interactivo */}
+                <DrawingCanvas />
+              </Td>
+            </tr>
+
+          </tbody>
+        </table>
       </div>
+
+      {/* =========================================
+          PÁGINA 2
+          ========================================= */}
+      <div className="w-full max-w-[850px] bg-white shadow-2xl p-4 sm:p-8 flex flex-col mb-24 print:shadow-none print:mt-0 page-break-before-always">
+        
+        {/* ENCABEZADO SIMPLIFICADO PAG 2 */}
+        <div className="flex justify-between items-center mb-2">
+           <div className="flex items-center gap-2">
+            <div className="font-black text-[8px] bg-black text-white px-1 py-0.5 tracking-wide">
+              INICIATIVA CIUDADANA
+            </div>
+            <div className="font-bold text-[10px] leading-tight border-l border-black pl-2">
+              Digitalizado y Codificado
+            </div>
+          </div>
+          <div className="text-[10px] font-serif italic text-right">Fundación Venezolana de Investigaciones Sismológicas</div>
+        </div>
+
+        {/* TABLA MASTER PAG 2 */}
+        <table className="w-full border-collapse border-2 border-black table-fixed bg-white">
+          <tbody>
+            
+            {/* 8. INSPECCIÓN INTERNA */}
+            <tr><Th colSpan={10}>8. INSPECCIÓN INTERNA</Th></tr>
+            <tr className="text-center font-bold bg-gray-100 text-[10px] leading-tight">
+              <td className="border border-black w-[15%]" rowSpan={2}>Elemento Estructural</td>
+              <td className="border border-black" colSpan={5}>Número de Elementos en el Piso Crítico<br/><span className="text-[8px] font-normal italic">Doble clic para auto-marcar (✓)</span></td>
+              <td className="border border-black w-[8%]" rowSpan={2}>Total<br/>Elementos</td>
+              <td className="border border-black" colSpan={3}>Porcentaje de daños</td>
+            </tr>
+            <tr className="text-center font-bold bg-gray-100 text-[10px]">
+              <td className="border border-black w-[9%]">Sin daño<br/>(I)</td>
+              <td className="border border-black w-[9%]">Leve<br/>(II)</td>
+              <td className="border border-black w-[9%]">Moderado<br/>(III)</td>
+              <td className="border border-black w-[9%]">Severo<br/>(IV)</td>
+              <td className="border border-black w-[9%]">Completo<br/>(V)</td>
+              <td className="border border-black w-[8%]">% con III</td>
+              <td className="border border-black w-[8%]">% con IV</td>
+              <td className="border border-black w-[8%]">% con V</td>
+            </tr>
+            {['Columna', 'Viga', 'Muro', 'Nodo / conexión', 'Losa', 'Mampostería'].map((el, i) => (
+              <tr key={i} className="text-center">
+                <td className="border border-black font-bold text-left px-1">{el}</td>
+                <td className="border border-black p-0"><DualInput value={data[`${i}_1`]} onChange={(v:any)=>update(`${i}_1`,v)} /></td>
+                <td className="border border-black p-0"><DualInput value={data[`${i}_2`]} onChange={(v:any)=>update(`${i}_2`,v)} /></td>
+                <td className="border border-black p-0"><DualInput value={data[`${i}_3`]} onChange={(v:any)=>update(`${i}_3`,v)} /></td>
+                <td className="border border-black p-0"><DualInput value={data[`${i}_4`]} onChange={(v:any)=>update(`${i}_4`,v)} /></td>
+                <td className="border border-black p-0"><DualInput value={data[`${i}_5`]} onChange={(v:any)=>update(`${i}_5`,v)} /></td>
+                <td className="border border-black bg-gray-50 p-0"><Input className="text-center w-full h-full p-1" /></td>
+                <td className="border border-black bg-gray-50 p-0"><Input className="text-center w-full h-full p-1" /></td>
+                <td className="border border-black bg-gray-50 p-0"><Input className="text-center w-full h-full p-1" /></td>
+                <td className="border border-black bg-gray-50 p-0"><Input className="text-center w-full h-full p-1" /></td>
+              </tr>
+            ))}
+
+            {/* 9. DAÑOS ESTRUCTURALES */}
+            <tr><Th colSpan={10}>9. DAÑOS EN ELEMENTOS ESTRUCTURALES</Th></tr>
+            <tr className="text-center bg-gray-100 font-bold text-[10px]">
+              <td colSpan={4} className="border border-black">Porcentajes de daños</td>
+              <td colSpan={2} className="border border-black">a</td>
+              <td colSpan={2} className="border border-black">b</td>
+              <td colSpan={2} className="border border-black">c</td>
+            </tr>
+            {[
+              ['Porcentaje de daño III', '< 30%', '30-60%', '> 60%'],
+              ['Porcentaje de daño IV', '< 10%', '10-30%', '> 30%'],
+              ['Porcentaje de daño V', '< 1%', '1-10%', '> 10%']
+            ].map((row, i) => (
+              <tr key={i} className="text-center">
+                <td colSpan={4} className="border border-black font-bold text-right pr-2">{row[0]}</td>
+                <td colSpan={2} className="border border-black p-0"><CheckboxRow label={row[1]} /></td>
+                <td colSpan={2} className="border border-black p-0"><CheckboxRow label={row[2]} /></td>
+                <td colSpan={2} className="border border-black p-0"><CheckboxRow label={row[3]} /></td>
+              </tr>
+            ))}
+            <tr>
+              <td colSpan={10} className="p-0 border-0">
+                <div className="bg-gray-200 border-b border-black text-center font-bold text-[10px] py-0.5">9.1 NIVEL DE RIESGO EN LA ESTRUCTURA</div>
+                <table className="w-full border-collapse border-b border-black">
+                  <tbody>
+                    <tr>
+                      <td className="w-1/3 p-0"><CheckboxRow label="A (todos a)" className="font-bold" /></td>
+                      <td className="w-1/3 p-0"><CheckboxRow label="B (b=1 y c=0)" className="font-bold" /></td>
+                      <td className="w-1/3 p-0"><CheckboxRow label="C (b≥2 o c≥1)" className="font-bold" /></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </td>
+            </tr>
+
+            {/* 10. NO ESTRUCTURALES */}
+            <tr><Th colSpan={10}>10. DAÑOS EN ELEMENTOS NO ESTRUCTURALES</Th></tr>
+            <tr className="text-center bg-gray-100 font-bold text-[10px]">
+              <td colSpan={4} className="border border-black">Elementos</td>
+              <td colSpan={2} className="border border-black">a</td>
+              <td colSpan={2} className="border border-black">b</td>
+              <td colSpan={2} className="border border-black">c</td>
+            </tr>
+            {[
+              ['Paredes / tabiquería', 'Sin o poco daño', 'Grietas, separación', 'Peligro de caída'],
+              ['Escaleras', 'Sin o poco daño', 'Grietas extendidas', 'Peligro de caída'],
+              ['Tanques / balcones', 'Sin o poco daño', 'Deformación visible', 'Peligro de caída'],
+              ['Fachada / cielo raso', 'Sin o poco daño', 'Grietas, deformación', 'Peligro de caída']
+            ].map((row, i) => (
+              <tr key={i} className="text-center text-[10px]">
+                <td colSpan={4} className="border border-black font-bold text-right pr-2">{row[0]}</td>
+                <td colSpan={2} className="border border-black p-0"><CheckboxRow label={row[1]} /></td>
+                <td colSpan={2} className="border border-black p-0"><CheckboxRow label={row[2]} /></td>
+                <td colSpan={2} className="border border-black p-0"><CheckboxRow label={row[3]} /></td>
+              </tr>
+            ))}
+             <tr>
+              <td colSpan={10} className="p-0 border-0">
+                <div className="bg-gray-200 border-b border-black text-center font-bold text-[10px] py-0.5">10.1 NIVEL DE RIESGO EN ELEMENTOS NO ESTRUCTURALES</div>
+                <table className="w-full border-collapse border-b border-black">
+                  <tbody>
+                    <tr>
+                      <td className="w-1/3 p-0"><CheckboxRow label="A (todos a o b≤2)" className="font-bold" /></td>
+                      <td className="w-1/3 p-0"><CheckboxRow label="B (b≥3)" className="font-bold" /></td>
+                      <td className="w-1/3 p-0"><CheckboxRow label="C (c≥1)" className="font-bold" /></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </td>
+            </tr>
+
+            {/* 11. DECISION FINAL */}
+            <tr>
+              <Th colSpan={10}>
+                11. DECISIÓN FINAL<br/>
+                <span className="text-[9px] font-normal tracking-normal">(tomar el nivel de riesgo más desfavorable entre los puntos 5.1, 9.1 y 10.1)</span>
+              </Th>
+            </tr>
+            <tr className="text-center bg-gray-100 font-bold text-sm">
+              <td colSpan={3} className="border border-black">A</td>
+              <td colSpan={4} className="border border-black">B</td>
+              <td colSpan={3} className="border border-black">C</td>
+            </tr>
+            <tr className="text-center font-bold">
+              <td colSpan={3} className="border border-black p-0 bg-green-50/50">
+                <table className="w-full h-full"><tbody><tr>
+                  <td className="p-2 text-center">Edificación Inspeccionada.<br/>Acceso Permitido<br/>(Etiqueta Verde)</td>
+                  <td className="w-6 p-1 text-center align-middle"><Input type="checkbox" className="w-4 h-4" /></td>
+                </tr></tbody></table>
+              </td>
+              <td colSpan={4} className="border border-black p-0 bg-yellow-50/50">
+                 <table className="w-full h-full"><tbody><tr>
+                  <td className="p-2 text-center">Acceso Restringido.<br/>Precaución al Entrar<br/>(Etiqueta Amarilla)</td>
+                  <td className="w-6 p-1 text-center align-middle"><Input type="checkbox" className="w-4 h-4" /></td>
+                </tr></tbody></table>
+              </td>
+              <td colSpan={3} className="border border-black p-0 bg-red-50/50">
+                 <table className="w-full h-full"><tbody><tr>
+                  <td className="p-2 text-center">Edificación Insegura.<br/>Acceso no Permitido<br/>(Etiqueta Roja)</td>
+                  <td className="w-6 p-1 text-center align-middle"><Input type="checkbox" className="w-4 h-4" /></td>
+                </tr></tbody></table>
+              </td>
+            </tr>
+            <tr className="bg-gray-50 text-[10px] font-bold border-b border-black">
+              <td colSpan={6} className="border-r border-black text-right pr-2 py-1 align-middle">11.1 Si hubo inspección previa, ¿cuál fue la etiqueta?</td>
+              <td colSpan={4} className="p-0">
+                <table className="w-full border-collapse h-full">
+                  <tbody>
+                    <tr>
+                      <td className="w-1/3 p-0 border-r border-gray-300"><CheckboxRow label="Verde" /></td>
+                      <td className="w-1/3 p-0 border-r border-gray-300"><CheckboxRow label="Amarilla" /></td>
+                      <td className="w-1/3 p-0"><CheckboxRow label="Roja" /></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </td>
+            </tr>
+
+            {/* 12. RECOMENDACIONES */}
+            <tr><Th colSpan={10}>12. RECOMENDACIONES</Th></tr>
+            <tr>
+              <td colSpan={10} className="p-0 border-0 border-b border-black">
+                <table className="w-full border-collapse">
+                  <tbody>
+                    <tr>
+                      <td className="w-1/4 border-r border-b border-black p-1 font-bold bg-gray-100 text-center">Inspección especializada</td>
+                      <td className="w-1/4 border-r border-b border-black p-0"><CheckboxRow label="Estructura" /></td>
+                      <td className="w-1/4 border-r border-b border-black p-0"><CheckboxRow label="Geotecnia" /></td>
+                      <td className="w-1/4 border-b border-black p-0"><CheckboxRow label="Servicios Públicos" /></td>
+                    </tr>
+                    <tr>
+                      <td className="w-1/4 border-r border-black p-1 font-bold bg-gray-100 text-center">Intervención de</td>
+                      <td className="w-1/4 border-r border-black p-0"><CheckboxRow label="PC o bomberos" /></td>
+                      <td className="w-1/4 border-r border-black p-0"><CheckboxRow label="Policía - Ejército" /></td>
+                      <td className="w-1/4 p-0"><CheckboxRow label="Autoridades" /></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </td>
+            </tr>
+
+            {/* 13. MEDIDAS DE SEGURIDAD */}
+            <tr><Th colSpan={10}>13. MEDIDAS DE SEGURIDAD</Th></tr>
+            <tr>
+              <td colSpan={10} className="p-0 border-0 border-b border-black">
+                <table className="w-full border-collapse">
+                  <tbody>
+                    <tr>
+                      <td className="w-1/3 border-r border-b border-black p-0"><CheckboxRow label="Restringir paso peatonal" /></td>
+                      <td className="w-1/3 border-r border-b border-black p-0"><CheckboxRow label="Desconectar agua" /></td>
+                      <td className="w-1/3 border-b border-black p-0"><CheckboxRow label="Apuntalar" /></td>
+                    </tr>
+                    <tr>
+                      <td className="w-1/3 border-r border-b border-black p-0"><CheckboxRow label="Restringir tráfico vehicular" /></td>
+                      <td className="w-1/3 border-r border-b border-black p-0"><CheckboxRow label="Desconectar energía" /></td>
+                      <td className="w-1/3 border-b border-black p-0"><CheckboxRow label="Demoler elementos" /></td>
+                    </tr>
+                    <tr>
+                      <td className="w-1/3 border-r border-black p-0"><CheckboxRow label="Manejo sust. peligrosas" /></td>
+                      <td className="w-1/3 border-r border-black p-0"><CheckboxRow label="Desconectar gas" /></td>
+                      <td className="w-1/3 p-0"><CheckboxRow label="Evacuar edificio vecino" /></td>
+                    </tr>
+                  </tbody>
+                </table>
+                <div className="border-t border-black p-1.5 text-[10px] flex items-center font-bold">
+                  Indique lugares del edificio para aplicar medidas: <Input className="border-b border-black border-dashed flex-1 ml-2" />
+                </div>
+              </td>
+            </tr>
+
+            {/* 14. OBSERVACIONES */}
+            <tr>
+              <Th colSpan={7}>14. OBSERVACIONES</Th>
+              <td colSpan={3} className="border border-black bg-gray-200 font-bold px-2 text-[11px] whitespace-nowrap">Hora Culminación: <Input type="time" className="w-20 bg-transparent border-b border-black ml-1" /></td>
+            </tr>
+            <tr>
+              <td colSpan={10} className="border border-black p-1 h-20 align-top">
+                <textarea className="w-full h-full bg-transparent outline-none resize-none text-[11px]" />
+              </td>
+            </tr>
+            <tr>
+              <td colSpan={10} className="border border-black text-[9px] p-1 font-bold text-gray-700 leading-tight">
+                Fotos a tomar: Identificación de la edificación - Fachadas - Pendiente del terreno - Talud cercano - Tipo estructural - Deslizamiento o derrumbes - Asentamiento(s) diferencial(es) - Grietas en fachada - Detalles del Piso crítico: Vigas - Columnas - Losas - Juntas - Nodos o conexiones - Observaciones - Daños en elementos no estructurales - Pandeo y deformaciones en elementos de acero - Estado de servicios públicos
+              </td>
+            </tr>
+
+            {/* ADJUNTO FOTOGRÁFICO DIGITAL (Solo visible en pantalla) */}
+            <tr className="print:hidden">
+              <td colSpan={10} className="border border-black p-3 bg-blue-50/50">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div>
+                    <div className="font-bold text-sm text-blue-900 flex items-center gap-2">
+                      <Camera size={16} /> Anexo Fotográfico Digital
+                    </div>
+                    <div className="text-[10px] text-blue-700">Sube imágenes de la galería o abre la cámara del móvil.</div>
+                  </div>
+                  <label className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-md cursor-pointer shadow-sm transition-colors text-xs uppercase tracking-wide flex items-center gap-2">
+                    <Camera size={14} /> <span>Tomar / Subir Fotos</span>
+                    <input 
+                      type="file" 
+                      multiple 
+                      accept="image/*" 
+                      capture="environment" 
+                      className="hidden" 
+                      onChange={(e) => {
+                        const files = e.target.files;
+                        if (files && files.length > 0) {
+                          alert(`Has adjuntado ${files.length} foto(s).`);
+                        }
+                      }} 
+                    />
+                  </label>
+                </div>
+              </td>
+            </tr>
+
+          </tbody>
+        </table>
+
+      </div>
+
     </main>
   );
 }
