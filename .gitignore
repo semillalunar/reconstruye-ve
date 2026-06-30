@@ -1,0 +1,7 @@
+# Directorios y scripts privados de OSINT/Data Lake
+data_lake/
+frontend/src/app/api/inteligencia/
+frontend/src/app/api/geo/
+frontend/src/app/inteligencia/
+frontend/src/app/mapa/
+frontend/scripts/
